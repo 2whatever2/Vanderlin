@@ -1,32 +1,32 @@
-/datum/advclass/combat/rogue
-	name = "Thief"
+/datum/job/advclass/combat/rogue
+	title = "Thief"
 	tutorial = "A wandering thief, capable of breaking in and out of just about any secure location, and born to meet the sharp end of the guillotine. Just remember, murder is the mark of an amateur."
 	allowed_sexes = list(MALE, FEMALE)
-	allowed_races = ALL_PLAYER_RACES_BY_NAME
-	outfit = /datum/outfit/job/adventurer/rogue
+
+	outfit = /datum/outfit/adventurer/rogue
 	min_pq = 5
 	category_tags = list(CTAG_ADVENTURER)
 	cmode_music = 'sound/music/cmode/adventurer/CombatRogue.ogg'
 
-/datum/outfit/job/adventurer/rogue/pre_equip(mob/living/carbon/human/H)
+/datum/outfit/adventurer/rogue/pre_equip(mob/living/carbon/human/H)
 	..()
 	if(H.mind)
-		H.mind?.adjust_skillrank(/datum/skill/combat/swords, pick(0,0,1), TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/combat/axesmaces, 2, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/combat/bows, 2, TRUE)
-		H.mind.adjust_skillrank(/datum/skill/combat/knives, 3, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/combat/wrestling, 1, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/combat/unarmed, 1, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/athletics, 3, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/swimming, 2, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/climbing, 5, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/reading, pick(0,1,1), TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/sewing, 1, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/sneaking, 5, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/stealing, 5, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/lockpicking, 4, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/craft/traps, 3, TRUE)
-	shirt = /obj/item/clothing/shirt/undershirt/black
+		H.adjust_skillrank(/datum/skill/combat/swords, pick(0,0,1), TRUE)
+		H.adjust_skillrank(/datum/skill/combat/axesmaces, 2, TRUE)
+		H.adjust_skillrank(/datum/skill/combat/bows, 2, TRUE)
+		H.adjust_skillrank(/datum/skill/combat/knives, 3, TRUE)
+		H.adjust_skillrank(/datum/skill/combat/wrestling, 1, TRUE)
+		H.adjust_skillrank(/datum/skill/combat/unarmed, 1, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/athletics, 3, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/swimming, 2, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/climbing, 5, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/reading, pick(0,1,1), TRUE)
+		H.adjust_skillrank(/datum/skill/misc/sewing, 1, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/sneaking, 5, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/stealing, 5, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/lockpicking, 4, TRUE)
+		H.adjust_skillrank(/datum/skill/craft/traps, 3, TRUE)
+	shirt = /obj/item/clothing/shirt/undershirt/colored/black
 	gloves = /obj/item/clothing/gloves/fingerless
 	pants = /obj/item/clothing/pants/trou/leather
 	shoes = /obj/item/clothing/shoes/boots
@@ -45,7 +45,7 @@
 	H.grant_language(/datum/language/thievescant)
 	to_chat(H, "<span class='info'>I can gesture in thieves' cant with ,t before my speech.</span>")
 
-/datum/outfit/job/adventurer/rogue/post_equip(mob/living/carbon/human/H, visualsOnly = FALSE)
+/datum/outfit/adventurer/rogue/post_equip(mob/living/carbon/human/H, visuals_only = FALSE)
 	..()
 	// Give them their cloak- as well as the ability to choose what color they want.
 	var/list/thiefcloak_colors = list(\
@@ -74,4 +74,4 @@
 	var/thiefcloak_color_selection = input(usr,"What color was I again?","The Cloak","Ashen Black") in thiefcloak_colors
 	var/obj/item/clothing/cloak/raincloak/thiefcloak = new()
 	thiefcloak.color = thiefcloak_colors[thiefcloak_color_selection]
-	H.equip_to_slot(thiefcloak, SLOT_CLOAK, TRUE)
+	H.equip_to_slot(thiefcloak, ITEM_SLOT_CLOAK, TRUE)

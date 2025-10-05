@@ -54,13 +54,15 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 
 /obj/effect/landmark/events/haunts
 	name = "hauntz"
-	icon_state = "generic_event"
+	icon_state = MAP_SWITCH("", "generic_event")
 
 /obj/effect/landmark/events/haunts/Initialize(mapload)
 	. = ..()
-	GLOB.hauntstart += src
-	icon_state = ""
+	GLOB.hauntstart |= src
 
+/obj/effect/landmark/events/haunts/Destroy()
+	GLOB.hauntstart -= src
+	return ..()
 
 /obj/effect/landmark/events/testportal
 	name = "testserverportal"
@@ -80,7 +82,7 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 /obj/effect/landmark/start/adventurerlate
 	name = "Adventurerlate"
 	icon_state = "arrow"
-	jobspawn_override = list("Pilgrim", "Adventurer")
+	jobspawn_override = list("Pilgrim", "Adventurer", "Wretch")
 	delete_after_roundstart = FALSE
 
 /obj/effect/landmark/start/vagrantlate
@@ -117,8 +119,7 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 	name = "Monarch"
 	icon_state = "arrow"
 
-
-/obj/effect/landmark/start/sheriff
+/obj/effect/landmark/start/captain
 	name = "Captain"
 	icon_state = "arrow"
 
@@ -130,8 +131,16 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 	name = "Court Magician"
 	icon_state = "arrow"
 
+/obj/effect/landmark/start/courtphys
+	name = "Court Physician"
+	icon_state = "arrow"
+
 /obj/effect/landmark/start/guardsman
 	name = "City Watchmen"
+	icon_state = "arrow"
+
+/obj/effect/landmark/start/lieutenant
+	name = "City Watch Lieutenant"
 	icon_state = "arrow"
 
 /obj/effect/landmark/start/manorguardsman
@@ -154,6 +163,10 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 	name = "Men-at-arms"
 	icon_state = "arrow"
 
+/obj/effect/landmark/start/gatemaster
+	name = "Gatemaster"
+	icon_state = "arrow"
+
 /obj/effect/landmark/start/forestwarden
 	name = "Forest Warden"
 	icon_state = "arrow"
@@ -165,7 +178,7 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 /obj/effect/landmark/start/villager
 	name = "Towner"
 	icon_state = "arrow"
-	jobspawn_override = list("Fisher","Noble","Hunter","Lumberjack","Miner","Physicker","Bard","Carpenter","Cheesemaker")
+	jobspawn_override = list("Fisher","Noble","Hunter","Lumberjack","Miner","Bard","Carpenter","Cheesemaker")
 
 /obj/effect/landmark/start/cheesemaker
 	name = "Cheesemaker"
@@ -212,6 +225,9 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 	name = "Stevedore"
 	icon_state = "arrow"
 
+/obj/effect/landmark/start/shophand
+	name = "Shophand"
+	icon_state = "arrow"
 
 /obj/effect/landmark/start/innkeep
 	name = "Innkeep"
@@ -267,10 +283,6 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 
 /obj/effect/landmark/start/mercenary
 	name = "Mercenary"
-	icon_state = "arrow"
-
-/obj/effect/landmark/start/physicker
-	name = "Physicker"
 	icon_state = "arrow"
 
 /obj/effect/landmark/start/minor_noble
@@ -341,6 +353,9 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 	name = "Feldsher"
 	icon_state = "arrow"
 
+/obj/effect/landmark/start/gaffer
+	name = "Gaffer"
+	icon_state = "arrow"
 //yrf
 
 /obj/effect/landmark/start/squire
@@ -353,6 +368,18 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 
 /obj/effect/landmark/start/servant
 	name = "Servant"
+	icon_state = "arrow"
+
+/obj/effect/landmark/start/tapster
+	name = "Tapster"
+	icon_state = "arrow"
+
+/obj/effect/landmark/start/matron_assistant
+	name = "Matron Assistant"
+	icon_state = "arrow"
+
+/obj/effect/landmark/start/gaffer_assistant
+	name = "Ring Servant"
 	icon_state = "arrow"
 
 /obj/effect/landmark/start/churchling
@@ -398,7 +425,7 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 	jobspawn_override = list("Lich")
 	delete_after_roundstart = FALSE
 
-/obj/effect/landmark/start/bandit/Initialize()
+/obj/effect/landmark/start/lich/Initialize()
 	. = ..()
 	GLOB.lich_starts += loc
 
@@ -509,28 +536,22 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark/start/new_player)
 /obj/effect/landmark/unit_test_top_right
 	name = "unit test zone top right"
 
-//Underworld landmark
-
-/obj/effect/landmark/underworld
-	name = "underworld spawn"
+//Underworld landmarks
 
 /obj/effect/landmark/underworld_spawnpoint
 	name = "underworld spawnpoint"
 
-/obj/effect/landmark/underworldsafe // To prevent demons spawn camping will save a lot of ear rape.
-	name = "safe zone"
-
 /obj/effect/landmark/underworld_spawnpoint/Initialize(mapload)
-	SHOULD_CALL_PARENT(FALSE)
-	GLOB.underworldspiritspawns += loc
+	. = ..()
+	GLOB.underworldspiritspawns |= loc
 	return INITIALIZE_HINT_QDEL
 
 /obj/effect/landmark/underworld_pull_location
 	name = "coin pull teleport zone"
 
 /obj/effect/landmark/underworld_pull_location/Initialize()
-	SHOULD_CALL_PARENT(FALSE)
-	GLOB.underworld_coinpull_locs += loc
+	. = ..()
+	GLOB.underworld_coinpull_locs |= loc
 	return INITIALIZE_HINT_QDEL
 
 /obj/effect/landmark/death_arena

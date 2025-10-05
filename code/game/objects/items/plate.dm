@@ -31,8 +31,8 @@
 	if(!LAZYACCESS(modifiers, ICON_X) || !LAZYACCESS(modifiers, ICON_Y))
 		return
 	if(user.transferItemToLoc(I, src, silent = FALSE))
-		I.pixel_x = clamp(text2num(LAZYACCESS(modifiers, ICON_X)) - 16, -max_x_offset, max_x_offset)
-		I.pixel_y = min(text2num(LAZYACCESS(modifiers, ICON_Y)) + placement_offset, max_height_offset)
+		I.pixel_x = I.base_pixel_x + clamp(text2num(LAZYACCESS(modifiers, ICON_X)) - 16, -max_x_offset, max_x_offset)
+		I.pixel_y = I.base_pixel_x + min(text2num(LAZYACCESS(modifiers, ICON_Y)) + placement_offset, max_height_offset)
 		to_chat(user, span_notice("You place [I] on [src]."))
 		AddToPlate(I, user)
 	else
@@ -62,7 +62,6 @@
 	if(istype(item_to_plate, /obj/item/reagent_containers/food/snacks))
 		var/obj/item/reagent_containers/food/snacks/S = item_to_plate
 		S.rotprocess += 1 MINUTES
-	update_icon()
 	w_class = contents.len ? WEIGHT_CLASS_BULKY : WEIGHT_CLASS_NORMAL
 
 ///This proc cleans up any signals on the item when it is removed from a plate, and ensures it has the correct state again.
@@ -99,11 +98,11 @@
 		ItemRemovedFromPlate(scattered_item)
 		scattered_item.forceMove(scatter_turf)
 		var/list/scatter_vector = scatter_gen.Rand()
-		scattered_item.pixel_x = scatter_vector[1]
-		scattered_item.pixel_y = scatter_vector[2]
+		scattered_item.pixel_x = scattered_item.base_pixel_x + scatter_vector[1]
+		scattered_item.pixel_y = scattered_item.base_pixel_y + scatter_vector[2]
 		scattered_item.throw_impact(hit_atom, throwingdatum)
 
-/obj/item/plate/attack_self(mob/user)
+/obj/item/plate/attack_self(mob/user, params)
 	. = ..()
 	if(contents.len) // If the tray isn't empty
 		for(var/obj/item/scattered_item as anything in contents)
@@ -133,6 +132,35 @@
 	icon_state = "platter_copper"
 	resistance_flags = FIRE_PROOF
 	drop_sound = 'sound/foley/dropsound/armor_drop.ogg'
+
+/obj/item/plate/pewter
+	name = "pewter platter"
+	desc = "A tin plate that contains just a tinge of lead."
+	icon_state = "platter_tin"
+	resistance_flags = FIRE_PROOF
+	drop_sound = 'sound/foley/dropsound/armor_drop.ogg'
+
+/obj/item/plate/silver
+	name = "silver platter"
+	desc = "A fancy silver plate often used by the nobility as a symbol of class."
+	icon_state = "platter_silver"
+	resistance_flags = FIRE_PROOF
+	drop_sound = 'sound/foley/dropsound/armor_drop.ogg'
+	sellprice = 12
+	smeltresult = /obj/item/ingot/silver
+
+/obj/item/plate/silver/Initialize(mapload)
+	. = ..()
+	enchant(/datum/enchantment/silver)
+
+/obj/item/plate/gold
+	name = "gold platter"
+	desc = "A fancy gold plate often used by the nobility as a symbol of class."
+	icon_state = "platter_gold"
+	resistance_flags = FIRE_PROOF
+	drop_sound = 'sound/foley/dropsound/armor_drop.ogg'
+	sellprice = 20
+	smeltresult = /obj/item/ingot/gold
 
 /obj/item/plate/tray
 	name = "tray"

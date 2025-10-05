@@ -20,10 +20,8 @@ Multi-Z stations are supported and multi-Z mining and away missions would
 require only minor tweaks.
 */
 
-// helpers for modifying jobs, used in various job_changes.dm files
-#define MAP_JOB_CHECK if(SSmapping.config.map_name != JOB_MODIFICATION_MAP_NAME) { return; }
-#define MAP_JOB_CHECK_BASE if(SSmapping.config.map_name != JOB_MODIFICATION_MAP_NAME) { return ..(); }
-#define MAP_REMOVE_JOB(jobpath) /datum/job/##jobpath/map_check() { return (SSmapping.config.map_name != JOB_MODIFICATION_MAP_NAME) && ..() }
+/// A map key that corresponds to being one exclusively for Space.
+#define SPACE_KEY "space"
 
 #define SPACERUIN_MAP_EDGE_PAD 15
 
@@ -45,11 +43,15 @@ require only minor tweaks.
 // number - default gravity if there's no gravity generators or area overrides present
 #define ZTRAIT_GRAVITY "Gravity"
 
+/// boolean - does this z prevent phasing
+#define ZTRAIT_NOPHASE "No Phase"
+
 // numeric offsets - e.g. {"Down": true} means that chasms will fall to z - 1 rather than oblivion
 #define ZTRAIT_UP "Up"
 #define ZTRAIT_DOWN "Down"
 #define ZTRAIT_IGNORE_WEATHER_TRAIT "NoDayorWeather"
 
+#define ZTRAIT_CELLAR_LIKE "Cellar"
 #define ZTRAIT_LEYLINES "Leylines"
 // enum - how space transitions should affect this level
 #define ZTRAIT_LINKAGE "Linkage"

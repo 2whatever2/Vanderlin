@@ -3,10 +3,10 @@
     "tasks": [
         {
             "type": "dreammaker",
-            "dme": "stonekeep.dme",
+            "dme": "vanderlin.dme",
             "problemMatcher": ["$dreammaker"],
             "group": "build",
-            "label": "dm: build - stonekeep.dme"
+            "label": "dm: build - vanderlin.dme"
         },
 
         {
@@ -61,6 +61,30 @@
         {
             "type": "process",
             "command": "tools/build/build",
+            "args": ["-DLOWMEMORYMODE", "-DNO_DUNGEON", "-DABSOLUTE_MINIMUM_MODE"],
+            "windows": {
+                "command": ".\\tools\\build\\build.bat",
+                "args": ["-DLOWMEMORYMODE", "-DNO_DUNGEON", "-DABSOLUTE_MINIMUM_MODE"]
+            },
+            "options": {
+                "env": {
+                    "DM_EXE": "${config:dreammaker.byondPath}"
+                }
+            },
+            "problemMatcher": [
+                "$dreammaker",
+                "$tsc",
+                "$eslint-stylish"
+            ],
+            "group": {
+                "kind": "build"
+            },
+            "dependsOn": "dm: reparse",
+            "label": "Build All (ABSOLUTE MINIMUM)"
+        },
+        {
+            "type": "process",
+            "command": "tools/build/build",
             "args": ["-DUNIT_TESTS"],
             "windows": {
                 "command": ".\\tools\\build\\build.bat",
@@ -82,5 +106,11 @@
             "dependsOn": "dm: reparse",
             "label": "Build All (unit tests)"
         },
+
+        {
+            "command": "${command:dreammaker.reparse}",
+            "group": "build",
+            "label": "dm: reparse"
+        }
     ]
 }

@@ -29,15 +29,15 @@
 					hingot.currecipe.item_added(user)
 					qdel(T.held_item)
 					T.held_item = null
-					T.update_icon()
-					update_icon()
+					T.update_appearance(UPDATE_ICON_STATE)
+					update_appearance(UPDATE_OVERLAYS)
 				return
 			else
 				hingot.forceMove(T)
 				T.held_item = hingot
 				hingot = null
-				T.update_icon()
-				update_icon()
+				T.update_appearance(UPDATE_ICON_STATE)
+				update_appearance(UPDATE_OVERLAYS)
 				return
 		else
 			if(T.held_item && istype(T.held_item, /obj/item/ingot))
@@ -47,8 +47,8 @@
 				hott = T.hott
 				if(hott)
 					START_PROCESSING(SSmachines, src)
-				T.update_icon()
-				update_icon()
+				T.update_appearance(UPDATE_ICON_STATE)
+				update_appearance(UPDATE_OVERLAYS)
 				return
 
 	if(istype(W, /obj/item/ingot))
@@ -56,13 +56,11 @@
 			W.forceMove(src)
 			hingot = W
 			hott = 0
-			update_icon()
+			update_appearance(UPDATE_OVERLAYS)
 			return
 
 	if(istype(W, /obj/item/weapon/hammer))
 		var/obj/item/weapon/hammer/hammer = W
-		if(!hammer.can_smith)
-			return
 		user.changeNext_move(CLICK_CD_MELEE)
 		if(!hingot)
 			return
@@ -75,13 +73,16 @@
 			user.flash_fullscreen("whiteflash")
 			shake_camera(user, 1, 1)
 			playsound(src,pick('sound/items/bsmith1.ogg','sound/items/bsmith2.ogg','sound/items/bsmith3.ogg','sound/items/bsmith4.ogg'), 100, FALSE)
+		if(has_world_trait(/datum/world_trait/delver))
+			if(!has_recipe_unlocked(user.key, hingot.currecipe.type))
+				return
 		var/used_str = user.STASTR
 		if(iscarbon(user))
 			var/mob/living/carbon/C = user
 			if(C.domhand)
 				used_str = C.get_str_arms(C.used_hand)
 			C.adjust_stamina(max(30 - (used_str * 3), 0))
-		var/total_chance = 7 * user.mind.get_skill_level(hingot.currecipe.appro_skill)
+		var/total_chance = 7 * user.get_skill_level(hingot.currecipe.appro_skill)
 		var/breakthrough = 0
 		if(prob(1 + total_chance))
 			user.flash_fullscreen("whiteflash")
@@ -107,8 +108,10 @@
 				var/dist = get_dist(M_turf, loc)
 				if(dist < 7)
 					continue
-				M.playsound_local(M_turf, null, 100, 1, get_rand_frequency(), falloff = 5, S = far_smith_sound)
+				M.playsound_local(M_turf, null, 100, 1, get_rand_frequency(), falloff_exponent = 5, S = far_smith_sound)
 
+		if(istype(hammer, /obj/item/weapon/hammer/wood))
+			hammer.take_damage(hammer.max_integrity * 0.03, BRUTE, "blunt")
 		return
 
 	if(hingot && hingot.currecipe && hingot.currecipe.needed_item && istype(W, hingot.currecipe.needed_item))
@@ -129,7 +132,7 @@
 		return
 	..()
 
-/obj/machinery/anvil/proc/choose_recipe(user)
+/obj/machinery/anvil/proc/choose_recipe(mob/user)
 	if(!hingot || !hott)
 		return
 
@@ -137,6 +140,11 @@
 	for(var/datum/anvil_recipe/R in GLOB.anvil_recipes)
 		if(is_abstract(R.type)) //these recipes are initialized
 			continue
+
+		if(has_world_trait(/datum/world_trait/delver))
+			if(!has_recipe_unlocked(user.key, R.type))
+				continue
+
 		if(istype(hingot, R.req_bar))
 			if(!valid_types.Find(R.i_type))
 				valid_types += R.i_type
@@ -144,7 +152,7 @@
 	if(!valid_types.len)
 		return
 
-	var/i_type_choice = input(user, "Choose a category", "Anvil") as null|anything in valid_types
+	var/i_type_choice = browser_input_list(user, "Choose a category", "Anvil", valid_types)
 	if(!i_type_choice)
 		return
 
@@ -163,7 +171,7 @@
 			appro_recipe -= R
 
 	if(appro_recipe.len)
-		var/datum/chosen_recipe = input(user, "Choose what to start working on:", "Anvil") as null|anything in sortNames(appro_recipe.Copy())
+		var/datum/chosen_recipe = browser_input_list(user, "Choose what to start working on:", "Anvil", sortNames(appro_recipe.Copy()))
 		if(!hingot.currecipe && chosen_recipe)
 			hingot.currecipe = new chosen_recipe.type(hingot)
 			hingot.currecipe.material_quality += hingot.quality
@@ -182,7 +190,7 @@
 			hingot = null
 			I.loc = user.loc
 			user.put_in_active_hand(I)
-			update_icon()
+			update_appearance(UPDATE_OVERLAYS)
 
 /obj/machinery/anvil/process()
 	if(hott)
@@ -191,18 +199,19 @@
 			STOP_PROCESSING(SSmachines, src)
 	else
 		STOP_PROCESSING(SSmachines, src)
-	update_icon()
+	update_appearance(UPDATE_OVERLAYS)
 
-/obj/machinery/anvil/update_icon()
-	cut_overlays()
-	if(hingot)
-		var/obj/item/I = hingot
-		I.pixel_x = 0
-		I.pixel_y = 0
-		var/mutable_appearance/M = new /mutable_appearance(I)
-		if(hott)
-			M.filters += filter(type="color", color = list(3,0,0,1, 0,2.7,0,0.4, 0,0,1,0, 0,0,0,1))
-		M.transform *= 0.5
-		M.pixel_y = 5
-		M.pixel_x = 3
-		add_overlay(M)
+/obj/machinery/anvil/update_overlays()
+	. = ..()
+	if(!hingot)
+		return
+	var/obj/item/I = hingot
+	I.pixel_x = I.base_pixel_x
+	I.pixel_y = I.base_pixel_y
+	var/mutable_appearance/M = new /mutable_appearance(I)
+	if(hott)
+		M.filters += filter(type="color", color = list(3,0,0,1, 0,2.7,0,0.4, 0,0,1,0, 0,0,0,1))
+	M.transform *= 0.5
+	M.pixel_y = 5
+	M.pixel_x = 3
+	. += M

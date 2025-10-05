@@ -3,11 +3,6 @@
 	crate_name = "merchant guild's crate"
 	crate_type = /obj/structure/closet/crate/chest/merchant
 
-/datum/supply_pack/jewelry/merctoken
-	name = "Mercenary Commendation Writ"
-	cost = 80
-	contains = /obj/item/merctoken
-
 /datum/supply_pack/jewelry/silverring
 	name = "Silver Ring"
 	cost = 40
@@ -28,23 +23,40 @@
 	cost = 100
 	contains = /obj/item/clothing/head/crown/nyle
 
-/datum/supply_pack/jewelry/silver_plaque_belt
-	name = "Silver Plaque Belt"
-	cost = 40
-	contains = /obj/item/storage/belt/leather/plaquesilver
-
-/datum/supply_pack/jewelry/gold_plaque_belt
-	name = "Gold Plaque Belt"
-	cost = 60
-	contains = /obj/item/storage/belt/leather/plaquegold
-
-/datum/supply_pack/jewelry/spectacles_golden
-	name = "Golden Spectacles"
-	cost = 40
-	contains = /obj/item/clothing/face/spectacles/golden
-
 /datum/supply_pack/jewelry/nomag
 	name = "Ring of Null Magic"
 	cost = 240
 	contains = /obj/item/clothing/ring/active/nomag
 
+/datum/supply_pack/jewelry/mercator
+	name = "Mercator Eye"
+	cost = 200
+	contains = /obj/item/clothing/neck/mercator
+
+/datum/supply_pack/jewelry/psycross // PSYDON LIVESSS RAHHHHHH
+	name = "Silver Psycross"
+	cost = 150
+	contains = /obj/item/clothing/neck/psycross/silver
+
+/datum/supply_pack/jewelry/bglasses
+	name = "Onyx Glasses"
+	cost = 150
+	contains = /obj/item/clothing/face/spectacles/sglasses
+
+/datum/supply_pack/jewelry/gmask
+	name = "Golden Halfmask"
+	cost = 100
+	contains = /obj/item/clothing/face/lordmask
+
+/datum/supply_pack/jewelry/scom
+	name = "SCOM ring"
+	cost = 200
+	contains = /obj/item/scomstone
+
+
+
+
+/datum/supply_pack/jewelry/consort_crown
+	name = "Jewel of Nyle"
+	cost = 300
+	contains = /obj/item/clothing/head/crown/nyle/consortcrown

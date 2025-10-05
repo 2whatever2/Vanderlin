@@ -1,8 +1,16 @@
 /obj/item/clothing/head/padded	// slightly armored subtype for convenience
 	armor = ARMOR_MINIMAL
 	prevent_crits = MINOR_CRITICALS
+	abstract_type = /obj/item/clothing/head/padded
 
 //................ Simple Hats ............... //
+/obj/item/clothing/head/dungeoneer
+	name = "sack hood"
+	desc = "A crude way to conceal one's identity, these are usually worn by local brigands to not get recognised."
+	icon_state = "dungeoneer"
+	flags_inv = HIDEEARS|HIDEFACE|HIDEHAIR|HIDEFACIALHAIR
+	fiber_salvage = FALSE
+
 /obj/item/clothing/head/menacing
 	name = "sack hood"
 	desc = "A crude way to conceal one's identity, these are usually worn by local brigands to not get recognised."
@@ -14,6 +22,7 @@
 	name = "knit cap"
 	desc = "A crude peasant cap worn by about every serf under Astrata's radiance."
 	icon_state = "knitcap"
+	min_cold_protection_temperature = -5
 
 /obj/item/clothing/head/headband
 	name = "headband"
@@ -23,14 +32,11 @@
 	fiber_salvage = FALSE
 	salvage_amount = 1
 
-/obj/item/clothing/head/headband/red
-	color = CLOTHING_BLOOD_RED
+/obj/item/clothing/head/headband/colored
+	misc_flags = CRAFTING_TEST_EXCLUDE
 
-/obj/item/clothing/head/softcap
-	name = "soft cap"
-	desc = "A white cap worn by most manual laborers to protect from sunburn."
-	icon_state = "armingcap"
-	flags_inv = HIDEEARS
+/obj/item/clothing/head/headband/colored/red
+	color = CLOTHING_BLOOD_RED
 
 /obj/item/clothing/head/shawl
 	name = "shawl"
@@ -39,6 +45,7 @@
 	flags_inv = HIDEEARS
 
 /obj/item/clothing/head/brimmed
+	name = "brimmed hat"
 	desc = "A simple brimmed hat that provides some relief from the sun."
 	icon_state = "brimmed"
 
@@ -48,10 +55,12 @@
 	name = "fur hat"
 	desc = "A hat made of fur typically worn by guildsmen."
 	icon_state = "hatfur"
+	min_cold_protection_temperature = -20
 
 /obj/item/clothing/head/hatblu
 	name = "fur hat"
 	icon_state = "hatblu"
+	min_cold_protection_temperature = -20
 
 /obj/item/clothing/head/papakha
 	name = "papakha"
@@ -59,6 +68,7 @@
 	icon_state = "papakha"
 	sellprice = VALUE_FINE_CLOTHING
 	max_integrity = INTEGRITY_POOR
+	min_cold_protection_temperature = -20
 
 //................ Fancy Hats ............... //
 
@@ -81,6 +91,7 @@
 	blocksound = SOFTHIT
 	salvage_amount = 1
 	salvage_result = /obj/item/natural/hide
+	min_cold_protection_temperature = -1
 
 /obj/item/clothing/head/helmet/leather/saiga
 	name = "saiga skull"
@@ -94,6 +105,7 @@
 	flags_inv = HIDEEARS|HIDEFACE
 	flags_cover = HEADCOVERSEYES
 	body_parts_covered = HEAD|EARS|HAIR|NOSE|EYES
+	min_cold_protection_temperature = -1
 
 
 //................ Briar Thorns ............... //	- Dendor Briar
@@ -180,15 +192,15 @@
 
 /obj/item/clothing/head/sack/equipped(mob/living/carbon/human/user, slot)
 	. = ..()
-	if(slot == ITEM_SLOT_HEAD)
-		user.become_blind("blindfold[REF(src)]")
+	if(slot & ITEM_SLOT_HEAD)
+		user.become_blind("blindfold_[REF(src)]")
 
 /obj/item/clothing/head/sack/dropped(mob/living/carbon/human/user)
 	..()
 	user.cure_blind("blindfold_[REF(src)]")
 
 /obj/item/clothing/head/sack/attack(mob/living/target, mob/living/user)
-	if(target.get_item_by_slot(SLOT_HEAD))
+	if(target.get_item_by_slot(ITEM_SLOT_HEAD))
 		to_chat(user, "<span class='warning'>Remove [target.p_their()] headgear first!</span>")
 		return
 	target.visible_message("<span class='warning'>[user] forces [src] onto [target]'s head!</span>", \
@@ -200,9 +212,16 @@
 			T.changeNext_move(8)
 			T.Immobilize(10)
 	user.dropItemToGround(src)
-	target.equip_to_slot_if_possible(src, SLOT_HEAD)
+	target.equip_to_slot_if_possible(src, ITEM_SLOT_HEAD)
 
+//............... Adept's Cowl ............... //
 
+/obj/item/clothing/head/adeptcowl
+	name = "adept's cowl"
+	desc = "A black cowl worn by the Adepts of the Inquisitorial Lodge"
+	icon_state = "adeptscowl"
+	item_state = "adeptscowl"
+	flags_inv = HIDEEARS|HIDEHAIR
 
 /*----------\
 | Graveyard |	- Not used or ingame in any way except admeme spawning them.
@@ -229,7 +248,10 @@
 /obj/item/clothing/head/headdress/alt
 	icon_state = "headdressalt"
 
-/obj/item/clothing/head/armingcap/dwarf // gnome hat I guess?
+/obj/item/clothing/head/armingcap/colored
+	misc_flags = CRAFTING_TEST_EXCLUDE
+
+/obj/item/clothing/head/armingcap/colored/dwarf // gnome hat I guess?
 	color = "#cb3434"
 
 /obj/item/clothing/head/vampire
@@ -240,3 +262,63 @@
 	dynamic_hair_suffix = null
 	sellprice = 1000
 	resistance_flags = FIRE_PROOF
+
+//................ Faceless Hood ............... //	- Faceless One
+
+/obj/item/clothing/head/faceless //A hood that doesn't cover the face.
+	name = "hood"
+	desc = "Conceals your face, whether against the rain, or the gazes of others."
+	icon_state = "facelesshood"
+	item_state = "facelesshood"
+	color = CLOTHING_SOOT_BLACK
+	dynamic_hair_suffix = ""
+	equip_sound = 'sound/foley/equip/cloak_equip.ogg'
+	pickup_sound = 'sound/foley/equip/cloak_take_off.ogg'
+	break_sound = 'sound/foley/cloth_rip.ogg'
+	drop_sound = 'sound/foley/dropsound/cloth_drop.ogg'
+	adjustable = CAN_CADJUST
+	toggle_icon_state = TRUE
+	var/default_hidden = null
+	body_parts_covered = NECK
+	salvage_amount = 1
+	salvage_result = /obj/item/natural/cloth
+
+/obj/item/clothing/head/faceless/AdjustClothes(mob/living/carbon/user)
+	if(loc == user)
+		if(adjustable == CAN_CADJUST)
+			adjustable = CADJUSTED
+			if(toggle_icon_state)
+				icon_state = "[initial(icon_state)]_t"
+			body_parts_covered = NECK|HAIR|EARS|HEAD
+			dynamic_hair_suffix = "+generic"
+			if(ishuman(user))
+				var/mob/living/carbon/H = user
+				H.update_inv_head()
+			block2add = FOV_BEHIND
+		else if(adjustable == CADJUSTED)
+			ResetAdjust(user)
+			dynamic_hair_suffix = ""
+			if(user)
+				if(ishuman(user))
+					var/mob/living/carbon/H = user
+					H.update_inv_head()
+		user.update_fov_angles()
+		user.regenerate_clothes()
+
+/obj/item/clothing/head/takuhatsugasa // egyptian
+	name = "takuhatsugasa"
+	desc = ""
+	icon_state = "takuhatsugasa"
+	item_flags = ABSTRACT
+
+/obj/item/clothing/head/helmet/pegasusknight
+	name = "pegasus knight helm"
+	desc = "A helmet typically worn by Lakkarian pegasus knights. Many find the design of this helmet unusual, but it protects the neck well and is easy to see out of."
+	icon_state = "lakkarihelm"
+	armor = ARMOR_PLATE
+	flags_inv = HIDEEARS|HIDEHAIR
+	body_parts_covered = HEAD_NECK
+	prevent_crits = ALL_EXCEPT_BLUNT
+	block2add = FOV_BEHIND
+	anvilrepair = /datum/skill/craft/armorsmithing
+	sewrepair = FALSE

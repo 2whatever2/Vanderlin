@@ -5,7 +5,7 @@
 	icon_state = "submit"
 	density = FALSE
 	blade_dulling = DULLING_BASH
-	pixel_y = 32
+	SET_BASE_PIXEL(0, 32)
 
 /obj/structure/fake_machine/submission/proc/attemptsell(obj/item/I, mob/H, message = TRUE, sound = TRUE)
 	for(var/datum/stock/R in SStreasury.stockpile_datums)
@@ -34,7 +34,6 @@
 				if(!A && message == TRUE)
 					say("Couldn't find where to send the submission.")
 					return
-				I.submitted_to_stockpile = TRUE
 				var/list/turfs = list()
 				for(var/turf/T in A)
 					turfs += T
@@ -79,7 +78,11 @@
 		attemptsell(P, user, TRUE, TRUE)
 		return TRUE
 
-/obj/structure/fake_machine/submission/attack_right(mob/user)
+/obj/structure/fake_machine/submission/attack_hand_secondary(mob/user, params)
+	. = ..()
+	if(. == SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN)
+		return
+	. = SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN
 	if(ishuman(user))
 		for(var/obj/I in get_turf(src))
 			attemptsell(I, user, FALSE, FALSE)
@@ -99,10 +102,10 @@ GLOBAL_VAR(feeding_hole_reset_timer)
 	icon = 'icons/roguetown/misc/machines.dmi'
 	icon_state = "feedinghole"
 	density = FALSE
-	pixel_y = 32
+	SET_BASE_PIXEL(0, 32)
 
 /obj/structure/feedinghole/attackby(obj/item/P, mob/user, params)
-	if(istype(P, /obj/item/reagent_containers/food/snacks/produce/wheat))
+	if(istype(P, /obj/item/reagent_containers/food/snacks/produce/grain/wheat))
 		qdel(P)
 /*		if(!GLOB.feeding_hole_reset_timer || world.time > GLOB.feeding_hole_reset_timer)
 			GLOB.feeding_hole_wheat_count = 0

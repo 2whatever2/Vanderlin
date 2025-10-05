@@ -1,3 +1,7 @@
+/// Standard follower modifier for storytellers, ie. how many points they get for each follower
+#define STANDARD_FOLLOWER_MODIFIER 20
+/// Lower follower modifier for special storytellers such as Astrata, who is a default patron
+#define LOWER_FOLLOWER_MODIFIER STANDARD_FOLLOWER_MODIFIER - 3
 
 ///The storyteller datum. He operates with the SSgamemode data to run events
 /datum/storyteller
@@ -14,6 +18,7 @@
 	/// Multipliers for starting points.
 	var/list/starting_point_multipliers = list(
 		EVENT_TRACK_MUNDANE = 1,
+		EVENT_TRACK_PERSONAL = 1,
 		EVENT_TRACK_MODERATE = 1,
 		EVENT_TRACK_INTERVENTION = 1,
 		EVENT_TRACK_CHARACTER_INJECTION = 1,
@@ -23,6 +28,7 @@
 	/// Multipliers for point gains.
 	var/list/point_gains_multipliers = list(
 		EVENT_TRACK_MUNDANE = 1,
+		EVENT_TRACK_PERSONAL = 1,
 		EVENT_TRACK_MODERATE = 1,
 		EVENT_TRACK_INTERVENTION = 1,
 		EVENT_TRACK_CHARACTER_INJECTION = 1,
@@ -62,6 +68,29 @@
 	var/always_votable = FALSE
 	///weight this has of being picked for random storyteller/showing up in the vote if not always_votable
 	var/weight = 0
+	/// List of all influence sets. One factor is picked from each set during initialization to create the final influence factors. Example: "Set 1" = list(STATS1 = list("points" = 0.015, "capacity" = 90), STATS2 = list("points" = 8, "capacity" = 50))
+	var/list/influence_sets = list()
+	/// Chosen influence factors, which are used to calculate storyteller influence. List of lists, which looks like RELEVANT_STATS = list(point gain, max capacity)
+	var/influence_factors = list()
+	/// Point modifier to all influence factors including the follower count, default is 1 (100%)
+	var/influence_modifier = 1
+	/// How many influence points storyteller gets for each follower
+	var/follower_modifier = STANDARD_FOLLOWER_MODIFIER
+	/// Thematic color of the storyteller, used in statistics menu
+	var/color_theme
+	/// How many times has this storyteller been chosen to lead the round
+	var/times_chosen = 0
+	/// Bonus points to the storyteller total influence
+	var/bonus_points = 0
+	/// If the storyteller is ascendant this round, that is if he reached over 100 points in rankings of the gods
+	var/ascendant = FALSE
+
+/datum/storyteller/New()
+	. = ..()
+	for(var/set_name in influence_sets)
+		var/list/current_set = influence_sets[set_name]
+		var/selected_stat = pick(current_set)
+		influence_factors[selected_stat] = current_set[selected_stat]
 
 /datum/storyteller/process()
 	if(!round_started || disable_distribution) // we are differing roundstarted ones until base roundstart so we can get cooler stuff
@@ -130,7 +159,7 @@
 		// Determine which events are valid to pick
 		for(var/datum/round_event_control/event as anything in mode.event_pools[track])
 			var/players_amt = get_active_player_count(alive_check = TRUE, afk_check = TRUE, human_check = TRUE)
-			if(forced)
+			if(forced && SSticker.HasRoundStarted())
 				if(QDELETED(event))
 					message_admins("[event.name] was deleted!")
 					continue
@@ -195,9 +224,9 @@
 		mode.TriggerEvent(bought_event, forced)
 	else
 		if(track == EVENT_TRACK_OMENS)
-			mode.schedule_event(bought_event, 3 MINUTES, total_cost, _forced = forced, omen = TRUE)
+			mode.schedule_event(bought_event, 2 MINUTES, total_cost, _forced = forced, omen = TRUE)
 		else
-			mode.schedule_event(bought_event, 3 MINUTES, total_cost, _forced = forced)
+			mode.schedule_event(bought_event, 2 MINUTES, total_cost, _forced = forced)
 	SSgamemode.triggered_round_events |= bought_event.name
 
 /// Calculates the weights of the events from a passed track.
@@ -217,9 +246,3 @@
 			weight_total -= event.reoccurence_penalty_multiplier * weight_total * (1 - (event_repetition_multiplier ** occurences))
 		/// Write it
 		event.calculated_weight = weight_total
-
-/datum/storyteller/astrata
-	name = "Astrata"
-	desc = "Astrata will provide a balanced and varied experience. Consider this the default experience."
-	weight = 6
-	always_votable = TRUE

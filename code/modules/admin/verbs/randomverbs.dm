@@ -20,7 +20,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Drop Everything") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_subtle_message(mob/M in GLOB.mob_list)
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Subtle Message"
 
 	if(!ismob(M))
@@ -38,7 +38,8 @@
 		if (usr.client)
 			if(usr.client.holder)
 				SEND_SOUND(usr.client, 'sound/misc/yeoldebwoink.ogg')
-				to_chat(M, "<i>I hear a voice in my head... <b>[msg]</i></b>")
+				M.playsound_local(soundin = 'sound/misc/yeoldebwoink.ogg', vol = 100)
+				to_chat(M, span_big("[span_abductor("I hear a voice in my head...")] [span_mind_control(msg)]"))
 
 	log_admin("SubtlePM: [key_name(usr)] -> [key_name(M)] : [msg]")
 	msg = "<span class='adminnotice'><b> SubtleMessage: [key_name_admin(usr)] -> [key_name_admin(M)] :</b> [msg]</span>"
@@ -47,7 +48,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Subtle Message") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_headset_message(mob/M in GLOB.mob_list)
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Headset Message"
 	set hidden = 1
 
@@ -81,7 +82,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Headset Message") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_mod_antag_rep(client/C in GLOB.clients, operation)
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Modify Antagonist Reputation"
 
 	if(!check_rights(R_ADMIN))
@@ -127,7 +128,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Modify Antagonist Reputation") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_world_narrate()
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Global Narrate"
 
 	if(!check_rights(R_ADMIN))
@@ -142,8 +143,29 @@
 	message_admins("<span class='adminnotice'>[key_name_admin(usr)] Sent a global narrate</span>")
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Global Narrate") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
+/client/proc/send_to_cryo(mob/M in GLOB.mob_list)
+	set category = "Admin"
+	set name = "Send To Cryo"
+
+	if(!check_rights(R_ADMIN))
+		return
+
+	if(!M)
+		M = input("Send who?", "Active Players") as null|anything in GLOB.player_list
+
+	if(!M)
+		return
+	var/message_to_admins = span_adminnotice("<b> [key_name(usr)] has sent ([M.name]/[M.key]):</b> to cryo. <BR>")
+	var/message_to_admin_user = span_notice(cryo_mob(M))
+
+	to_chat(src, message_to_admin_user)
+	log_admin(message_to_admins)
+	message_admins(message_to_admins)
+	admin_ticket_log(M, message_to_admins)
+	SSblackbox.record_feedback("tally", "admin_verb", 1, "Send To Cryo") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
+
 /client/proc/cmd_admin_direct_narrate(mob/M)
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Direct Narrate"
 
 	if(!check_rights(R_ADMIN))
@@ -168,7 +190,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Direct Narrate") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_local_narrate(atom/A)
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Local Narrate"
 
 	if(!check_rights(R_ADMIN))
@@ -189,7 +211,7 @@
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Local Narrate") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_godmode(mob/M in GLOB.mob_list)
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Godmode"
 	if(!check_rights(R_ADMIN))
 		return
@@ -291,7 +313,7 @@ Works kind of like entering the game with a new character. Character receives a 
 Traitors and the like can also be revived with the previous role mostly intact.
 /N */
 /client/proc/respawn_character()
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Respawn Character"
 	set desc = ""
 	if(!check_rights(R_ADMIN))
@@ -400,7 +422,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Add Custom AI Law") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_rejuvenate(mob/living/M in GLOB.mob_list)
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Rejuvenate"
 
 	if(!check_rights(R_ADMIN))
@@ -438,7 +460,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Manage Job Slots") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/cmd_admin_explosion(atom/O as obj|mob|turf in world)
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Explosion"
 
 	if(!check_rights(R_ADMIN))
@@ -477,7 +499,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 		return
 
 /client/proc/cmd_admin_gib(mob/M in GLOB.mob_list)
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Gib"
 
 	if(!check_rights(R_ADMIN))
@@ -514,7 +536,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 		mob.gib(1, 1, 1)
 
 /client/proc/cmd_admin_check_contents(mob/living/M in GLOB.mob_list)
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Check Contents"
 
 	var/list/L = M.get_contents()
@@ -523,7 +545,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	SSblackbox.record_feedback("tally", "admin_verb", 1, "Check Contents") //If you are copy-pasting this, ensure the 2nd parameter is unique to the new proc!
 
 /client/proc/toggle_view_range()
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Change View Range"
 	set desc = ""
 
@@ -535,9 +557,9 @@ Traitors and the like can also be revived with the previous role mostly intact.
 		views |= 32
 		views |= 64
 		views |= 128
-		change_view(input("Select view range:", "FUCK YE", 7) in views)
+		view_size.setTo(input("Select view range:", "FUCK YE", 7) in views)
 	else
-		change_view(CONFIG_GET(string/default_view))
+		view_size.resetToDefault()
 
 	log_admin("[key_name(usr)] changed their view range to [view].")
 	//message_admins("\blue [key_name_admin(usr)] changed their view range to [view].")	//why? removed by order of XSI
@@ -593,7 +615,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 
 
 /client/proc/admin_change_sec_level()
-	set category = "Special Verbs"
+	set category = "Special"
 	set name = "Set Security Level"
 	set desc = ""
 	set hidden = 1
@@ -636,7 +658,7 @@ Traitors and the like can also be revived with the previous role mostly intact.
 
 
 /client/proc/has_antag_hud()
-	var/datum/atom_hud/A = GLOB.huds[ANTAG_HUD_TRAITOR]
+	var/datum/atom_hud/A = GLOB.huds[ANTAG_HUD_HIDDEN]
 	return A.hudusers[mob]
 
 /client/proc/show_tip()
@@ -696,6 +718,8 @@ Traitors and the like can also be revived with the previous role mostly intact.
 		ADMIN_PUNISHMENT_NECKSNAP,
 		ADMIN_PUNISHMENT_HUNTED,
 		ADMIN_PUNISHMENT_MEATPIE,
+		ADMIN_PUNISHMENT_GODHAND,
+		ADMIN_PUNISHMENT_FORCECOLLAR,
 	)
 
 	var/punishment = input("Choose a punishment", "DIVINE SMITING") as null|anything in sortList(punishment_list)
@@ -787,9 +811,40 @@ Traitors and the like can also be revived with the previous role mostly intact.
 				return
 			var/mutable_appearance/meatpie_appearance = mutable_appearance('icons/roguetown/items/food.dmi', "meatpie")
 			var/mutable_appearance/transform_scanline = mutable_appearance('icons/effects/effects.dmi', "smoke")
-			target.notransform = TRUE
+			ADD_TRAIT(target, TRAIT_NO_TRANSFORM, ADMIN_PUNISHMENT_MEATPIE)
 			target.transformation_animation(meatpie_appearance, 5 SECONDS, transform_scanline.appearance)
 			addtimer(CALLBACK(GLOBAL_PROC, GLOBAL_PROC_REF(pieify), target), 5 SECONDS)
+		if(ADMIN_PUNISHMENT_GODHAND)
+			var/list/hands = list(
+				"Astrata" = /obj/effect/god_hand,
+				"Photorealistic" = /obj/effect/god_hand/photorealistic,
+			)
+			var/typepath_choice = browser_input_list(src, "Hand of God", "Which hand?", hands)
+			if(!typepath_choice)
+				return
+			target.be_taken_with_hand_of_god(hands[typepath_choice])
+		if(ADMIN_PUNISHMENT_FORCECOLLAR)
+			if(!ishuman(target))
+				to_chat(usr, span_warning("Target must be human!"))
+				return
+			var/static/list/collar = list(
+				"Bell Collar" = /obj/item/clothing/neck/bellcollar,
+				"Leather Collar" = /obj/item/clothing/neck/leathercollar,
+			)
+			var/typepath_choice = browser_input_list(src, "Inflict Suffering", "What kind?", collar) // Hopefully just copying and pasting actual code works <3
+			if(!typepath_choice)
+				return
+			var/mob/living/carbon/human/H = target
+			if(H.wear_neck)
+				var/obj/I = H.wear_neck
+				target.dropItemToGround(I, TRUE)
+			var/typepath = collar[typepath_choice]
+			var/obj/created_collar = new typepath (get_turf(target))
+			H.equip_to_slot(created_collar, ITEM_SLOT_NECK)
+			ADD_TRAIT(created_collar, TRAIT_NODROP, "adminabuse")
+			to_chat(target, span_userdanger("A ring of darkness restrains my neck, and a collar is made manifest!"))
+			H.add_stress(/datum/stress_event/collarcurse)
+
 	punish_log(target, punishment)
 
 /client/proc/punish_log(whom, punishment)
@@ -884,7 +939,9 @@ Traitors and the like can also be revived with the previous role mostly intact.
 	var/source = "adminabuse"
 	switch(add_or_remove)
 		if("Add") //Not doing source choosing here intentionally to make this bit faster to use, you can always vv it.
-			ADD_TRAIT(D,chosen_trait,source)
+			if(GLOB.movement_type_trait_to_flag[chosen_trait]) //include the required element.
+				D.AddElement(/datum/element/movetype_handler)
+			ADD_TRAIT(D, chosen_trait, source)
 		if("Remove")
 			var/specific = input("All or specific source ?", "Trait Remove/Add") as null|anything in list("All","Specific")
 			if(!specific)

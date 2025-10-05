@@ -1,4 +1,4 @@
-
+GLOBAL_LIST_EMPTY(letters_sent)
 
 /obj/structure/fake_machine/mail
 	name = "HERMES"
@@ -7,7 +7,7 @@
 	icon_state = "mail"
 	density = FALSE
 	blade_dulling = DULLING_BASH
-	pixel_y = 32
+	SET_BASE_PIXEL(0, 32)
 	var/coin_loaded = FALSE
 	var/ournum
 	var/mailtag
@@ -15,7 +15,7 @@
 
 /obj/structure/fake_machine/mail/attack_hand(mob/user)
 	if(SSroguemachine.hermailermaster && ishuman(user))
-		var/obj/item/roguemachine/mastermail/M = SSroguemachine.hermailermaster
+		var/obj/item/fake_machine/mastermail/M = SSroguemachine.hermailermaster
 		var/mob/living/carbon/human/H = user
 		var/addl_mail = FALSE
 		for(var/obj/item/I in M.contents)
@@ -31,18 +31,19 @@
 			show_inquisitor_shop(user)
 			return
 
-/obj/structure/fake_machine/mail/attack_right(mob/user)
+/obj/structure/fake_machine/mail/attack_hand_secondary(mob/user, params)
 	. = ..()
-	if(.)
+	if(. == SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN)
 		return
+	. = SECONDARY_ATTACK_CANCEL_ATTACK_CHAIN
 	user.changeNext_move(CLICK_CD_MELEE)
 	if(!coin_loaded)
 		to_chat(user, "<span class='warning'>The machine doesn't respond. It needs a coin.</span>")
 		return
-	var/send2place = input(user, "Where to? (Person or #number)", "VANDERLIN", null)
+	var/send2place = browser_input_text(user, "Where to? (Person or #number)")
 	if(!send2place)
 		return
-	var/sentfrom = input(user, "Who is this letter from?", "VANDERLIN", null)
+	var/sentfrom = browser_input_text(user, "Who is this letter from?")
 	if(!sentfrom)
 		sentfrom = "Anonymous"
 	var/t = stripped_multiline_input("Write Your Letter", "VANDERLIN", no_trim=TRUE)
@@ -58,7 +59,7 @@
 	P.info += t
 	P.mailer = sentfrom
 	P.mailedto = send2place
-	P.update_icon()
+	P.update_appearance(UPDATE_ICON_STATE | UPDATE_NAME)
 	if(findtext(send2place, "#"))
 		var/box2find = text2num(copytext(send2place, findtext(send2place, "#")+1))
 		var/found = FALSE
@@ -67,17 +68,21 @@
 				found = TRUE
 				P.mailer = sentfrom
 				P.mailedto = send2place
-				P.update_icon()
+				P.update_appearance(UPDATE_ICON_STATE | UPDATE_NAME)
 				P.forceMove(X.loc)
 				X.say("New mail!")
 				playsound(X, 'sound/misc/mail.ogg', 100, FALSE, -1)
 				break
 		if(found)
+			if(P.info)
+				var/stripped_info = remove_color_tags(P.info)
+				GLOB.letters_sent |= stripped_info
 			visible_message("<span class='warning'>[user] sends something.</span>")
 			playsound(loc, 'sound/misc/disposalflush.ogg', 100, FALSE, -1)
 			SStreasury.give_money_treasury(coin_loaded, "Mail Income")
+			record_round_statistic(STATS_TAXES_COLLECTED, coin_loaded)
 			coin_loaded = FALSE
-			update_icon()
+			update_appearance(UPDATE_OVERLAYS)
 			return
 		else
 			to_chat(user, "<span class='warning'>Failed to send it. Bad number?</span>")
@@ -85,24 +90,28 @@
 		if(!send2place)
 			return
 		if(SSroguemachine.hermailermaster)
-			var/obj/item/roguemachine/mastermail/X = SSroguemachine.hermailermaster
+			var/obj/item/fake_machine/mastermail/X = SSroguemachine.hermailermaster
 			P.mailer = sentfrom
 			P.mailedto = send2place
-			P.update_icon()
+			P.update_appearance(UPDATE_ICON_STATE | UPDATE_NAME)
 			P.forceMove(X.loc)
 			var/datum/component/storage/STR = X.GetComponent(/datum/component/storage)
 			STR.handle_item_insertion(P, prevent_warning=TRUE)
 			X.new_mail=TRUE
-			X.update_icon()
+			X.update_appearance(UPDATE_ICON_STATE)
 			send_ooc_note("New letter from <b>[sentfrom].</b>", name = send2place)
 		else
 			to_chat(user, "<span class='warning'>The master of mails has perished?</span>")
 			return
+		if(P.info)
+			var/stripped_info = remove_color_tags(P.info)
+			GLOB.letters_sent |= stripped_info
 		visible_message("<span class='warning'>[user] sends something.</span>")
 		playsound(loc, 'sound/misc/disposalflush.ogg', 100, FALSE, -1)
 		SStreasury.give_money_treasury(coin_loaded, "Mail")
+		record_round_statistic(STATS_TAXES_COLLECTED, coin_loaded)
 		coin_loaded = FALSE
-		update_icon()
+		update_appearance(UPDATE_OVERLAYS)
 
 /obj/structure/fake_machine/mail/attackby(obj/item/P, mob/user, params)
 	if(istype(P, /obj/item/merctoken))
@@ -110,7 +119,7 @@
 			to_chat(user, span_warning("I do not know what this is, and I do not particularly care."))
 
 		var/mob/living/carbon/human/H = user
-		if(is_merchant_job(H.mind.assigned_role))
+		if(is_merchant_job(H.mind.assigned_role) || is_gaffer_job(H.mind.assigned_role))
 			to_chat(H, span_warning("This is of no use to me - I may give this to a mercenary so they may send it themselves."))
 			return
 		if(!is_mercenary_job(H.mind.assigned_role))
@@ -140,7 +149,7 @@
 			if(0)
 				new /obj/item/clothing/neck/shalal(drop_location)
 			if(1)
-				new /obj/item/clothing/neck/mercmedal/zybatine(drop_location)
+				new /obj/item/clothing/neck/mercmedal/zaladin(drop_location)
 			if(2)
 				new /obj/item/clothing/neck/mercmedal/grenzelhoft(drop_location)
 			if(3)
@@ -153,35 +162,46 @@
 				new /obj/item/clothing/neck/mercmedal/boltslinger(drop_location)
 			if(7)
 				new /obj/item/clothing/neck/mercmedal/anthrax(drop_location)
+			if(8)
+				new /obj/item/clothing/neck/mercmedal/duelist(drop_location)
+			if(9)
+				new /obj/item/clothing/neck/mercmedal(drop_location)
+			if(10)
+				new /obj/item/clothing/neck/mercmedal/abyssal(drop_location)
+			if(11)
+				new /obj/item/clothing/neck/mercmedal/goldfeather(drop_location)
 
 	if(istype(P, /obj/item/paper/confession))
 		if(is_inquisitor_job(user.mind.assigned_role) || is_adept_job(user.mind.assigned_role)) // Only Inquisitors and Adepts can sumbit confessions.
 			process_confession(user, P)
 			return
 	if(istype(P, /obj/item/paper))
-		if(P.w_class >= WEIGHT_CLASS_BULKY)
+		var/obj/item/paper/given_paper = P
+		if(given_paper.w_class >= WEIGHT_CLASS_BULKY)
 			return
 		if(alert(user, "Send Mail?",,"YES","NO") == "YES")
-			var/send2place = input(user, "Where to? (Person or #number)", "VANDERLIN", null)
-			var/sentfrom = input(user, "Who is this from?", "VANDERLIN", null)
+			var/send2place = browser_input_text(user, "Where to? (Person or #number)")
+			var/sentfrom = browser_input_text(user, "Who is this from?")
 			if(!sentfrom)
 				sentfrom = "Anonymous"
 			if(findtext(send2place, "#"))
 				var/box2find = text2num(copytext(send2place, findtext(send2place, "#")+1))
-				testing("box2find [box2find]")
 				var/found = FALSE
 				for(var/obj/structure/fake_machine/mail/X in SSroguemachine.hermailers)
 					if(X.ournum == box2find)
 						found = TRUE
-						P.mailer = sentfrom
-						P.mailedto = send2place
-						P.update_icon()
-						P.forceMove(X.loc)
+						given_paper.mailer = sentfrom
+						given_paper.mailedto = send2place
+						given_paper.update_appearance(UPDATE_ICON_STATE | UPDATE_NAME)
+						given_paper.forceMove(X.loc)
 						X.say("New mail!")
 						playsound(X, 'sound/misc/mail.ogg', 100, FALSE, -1)
 						playsound(src.loc, 'sound/misc/hiss.ogg', 100, FALSE, -1)
 						break
 				if(found)
+					if(given_paper.info)
+						var/stripped_info = remove_color_tags(given_paper.info)
+						GLOB.letters_sent |= stripped_info
 					visible_message("<span class='warning'>[user] sends something.</span>")
 					playsound(loc, 'sound/misc/disposalflush.ogg', 100, FALSE, -1)
 					return
@@ -192,20 +212,23 @@
 					return
 				var/findmaster
 				if(SSroguemachine.hermailermaster)
-					var/obj/item/roguemachine/mastermail/X = SSroguemachine.hermailermaster
+					var/obj/item/fake_machine/mastermail/X = SSroguemachine.hermailermaster
 					findmaster = TRUE
-					P.mailer = sentfrom
-					P.mailedto = send2place
-					P.update_icon()
-					P.forceMove(X.loc)
+					given_paper.mailer = sentfrom
+					given_paper.mailedto = send2place
+					given_paper.update_appearance(UPDATE_ICON_STATE | UPDATE_NAME)
+					given_paper.forceMove(X.loc)
 					var/datum/component/storage/STR = X.GetComponent(/datum/component/storage)
-					STR.handle_item_insertion(P, prevent_warning=TRUE)
+					STR.handle_item_insertion(given_paper, prevent_warning=TRUE)
 					X.new_mail=TRUE
-					X.update_icon()
+					X.update_appearance(UPDATE_ICON_STATE)
 					playsound(src.loc, 'sound/misc/hiss.ogg', 100, FALSE, -1)
 				if(!findmaster)
 					to_chat(user, "<span class='warning'>The master of mails has perished?</span>")
 				else
+					if(given_paper.info)
+						var/stripped_info = remove_color_tags(given_paper.info)
+						GLOB.letters_sent |= stripped_info
 					visible_message("<span class='warning'>[user] sends something.</span>")
 					playsound(loc, 'sound/misc/disposalflush.ogg', 100, FALSE, -1)
 					send_ooc_note("<span class='boldnotice'>New letter from <b>[sentfrom].</b></span>", name = send2place)
@@ -219,16 +242,16 @@
 		coin_loaded = C.get_real_price()
 		qdel(C)
 		playsound(src, 'sound/misc/coininsert.ogg', 100, FALSE, -1)
-		update_icon()
+		update_appearance(UPDATE_OVERLAYS)
 		return
-	..()
+	return ..()
 
 /obj/structure/fake_machine/mail/Initialize()
 	. = ..()
 	SSroguemachine.hermailers += src
 	ournum = SSroguemachine.hermailers.len
 	name = "[name] #[ournum]"
-	update_icon()
+	update_appearance(UPDATE_OVERLAYS)
 
 /obj/structure/fake_machine/mail/Destroy()
 	set_light(0)
@@ -236,25 +259,23 @@
 	return ..()
 
 /obj/structure/fake_machine/mail/r
-	pixel_y = 0
-	pixel_x = 32
+	SET_BASE_PIXEL(32, 0)
 
 /obj/structure/fake_machine/mail/l
-	pixel_y = 0
-	pixel_x = -32
+	SET_BASE_PIXEL(-32, 0)
 
-/obj/structure/fake_machine/mail/update_icon()
-	cut_overlays()
+/obj/structure/fake_machine/mail/update_overlays()
+	. = ..()
 	if(coin_loaded)
-		add_overlay(mutable_appearance(icon, "mail-f"))
+		. += mutable_appearance(icon, "mail-f")
 		set_light(1, 1, 1, l_color =  "#ff0d0d")
 	else
-		add_overlay(mutable_appearance(icon, "mail-s"))
+		. += mutable_appearance(icon, "mail-s")
 		set_light(1, 1, 1, l_color =  "#1b7bf1")
 
 /obj/structure/fake_machine/mail/examine(mob/user)
 	. = ..()
-	. += "<a href='byond://?src=[REF(src)];directory=1'>Directory:</a> [mailtag]"
+	. += "<a href='byond://?src=[REF(src)];directory=1'>Directory:</a> [mailtag || capitalize(get_area_name(src))]"
 
 /obj/structure/fake_machine/mail/Topic(href, href_list)
 	..()
@@ -279,45 +300,33 @@
 	popup.set_content(dat)
 	popup.open(FALSE)
 
-/obj/item/roguemachine/mastermail
+/obj/item/fake_machine/mastermail
 	name = "MASTER OF MAILS"
 	icon = 'icons/roguetown/misc/machines.dmi'
 	icon_state = "mailspecial"
-	pixel_y = 32
-	max_integrity = 0
+	SET_BASE_PIXEL(0, 32)
 	density = FALSE
 	blade_dulling = DULLING_BASH
 	anchored = TRUE
 	w_class = WEIGHT_CLASS_GIGANTIC
 	var/new_mail
 
-/obj/item/roguemachine/mastermail/update_icon()
-	cut_overlays()
-	if(new_mail)
-		icon_state = "mailspecial-get"
-	else
-		icon_state = "mailspecial"
-	set_light(1, 1, 1, l_color = "#ff0d0d")
-
-/obj/item/roguemachine/mastermail/ComponentInitialize()
-	. = ..()
-	AddComponent(/datum/component/storage/concrete/grid/mailmaster)
-
-/obj/item/roguemachine/mastermail/attack_hand(mob/user)
-	var/datum/component/storage/CP = GetComponent(/datum/component/storage)
-	if(CP)
-		if(new_mail)
-			new_mail = FALSE
-			update_icon()
-		CP.rmb_show(user)
-		return TRUE
-
-/obj/item/roguemachine/mastermail/Initialize()
+/obj/item/fake_machine/mastermail/Initialize()
 	. = ..()
 	SSroguemachine.hermailermaster = src
-	update_icon()
+	update_appearance(UPDATE_ICON_STATE)
+	set_light(1, 1, 1, l_color = "#ff0d0d")
+	AddComponent(/datum/component/storage/concrete/grid/mailmaster)
 
-/obj/item/roguemachine/mastermail/attackby(obj/item/P, mob/user, params)
+/obj/item/fake_machine/mastermail/Destroy()
+	SSroguemachine.hermailermaster = null
+	return ..()
+
+/obj/item/fake_machine/mastermail/update_icon_state()
+	. = ..()
+	icon_state = "mailspecial[new_mail ? "-get" : ""]"
+
+/obj/item/fake_machine/mastermail/attackby(obj/item/P, mob/user, params)
 	if(istype(P, /obj/item/paper))
 		var/obj/item/paper/PA = P
 		if(!PA.mailer && !PA.mailedto && PA.cached_mailer && PA.cached_mailedto)
@@ -325,14 +334,14 @@
 			PA.mailedto = PA.cached_mailedto
 			PA.cached_mailer = null
 			PA.cached_mailedto = null
-			PA.update_icon()
+			PA.update_appearance(UPDATE_ICON_STATE | UPDATE_NAME)
 			to_chat(user, "<span class='warning'>I carefully re-seal the letter and place it back in the machine, no one will know.</span>")
 		P.forceMove(loc)
 		var/datum/component/storage/STR = GetComponent(/datum/component/storage)
 		STR.handle_item_insertion(P, prevent_warning=TRUE)
 	..()
 
-/obj/item/roguemachine/mastermail/Destroy()
+/obj/item/fake_machine/mastermail/Destroy()
 	set_light(0)
 	SSroguemachine.hermailers -= src
 	var/datum/component/storage/STR = GetComponent(/datum/component/storage)
@@ -349,20 +358,15 @@
 			return
 		if(GLOB.confessors)
 			var/no
-			if(", [C.signed]" in GLOB.confessors)
-				no = TRUE
 			if("[C.signed]" in GLOB.confessors)
 				no = TRUE
 			if(!no)
-				if(GLOB.confessors.len)
-					GLOB.confessors += ", [C.signed] - a [C.antag]"
-				else
-					GLOB.confessors += "[C.signed] - a [C.antag]"
+				GLOB.confessors += "[C.signed] - a [C.antag]"
 		qdel(C)
 		visible_message("<span class='warning'>[user] sends something.</span>")
 		playsound(loc, 'sound/magic/forgotten_bell.ogg', 80, FALSE, -1)
 		playsound(loc, 'sound/misc/disposalflush.ogg', 100, FALSE, -1)
-		for(var/mob/living/carbon/human/I in world) // Find all the living Inquisitors and Adepts and give them a triumph for the confession.
+		for(var/mob/living/carbon/human/I in GLOB.human_list) // Find all the living Inquisitors and Adepts and give them a triumph for the confession.
 			if(I.mind && (is_inquisitor_job(I.mind.assigned_role) || is_adept_job(I.mind.assigned_role)) && !(I.stat == DEAD))
 				if(is_inquisitor_job(I.mind.assigned_role))
 					I.confession_points += 5 // Increase the Inquisitor's confession count.
@@ -381,12 +385,11 @@
 	// Ensure purchase_history is initialized
 	if(!user.purchase_history)
 		user.purchase_history = list()
-		testing("Initialized purchase_history for user")
 
 	// Define the available items, their costs, and max purchases
 	var/list/items = list(
 		// Weapons
-		"Puffer Pistol- 4 Lead Balls- Powder Flask  (10)" = list(
+		"Puffer Pistol- 4 Lead Balls- Powder Flask  (8)" = list(
 			list(type = /obj/item/gun/ballistic/revolver/grenadelauncher/pistol, count = 1),
 			list(type = /obj/item/storage/belt/pouch/bullets, count = 1),
 			list(type = /obj/item/reagent_containers/glass/bottle/aflask, count = 1),
@@ -398,19 +401,70 @@
 			cost = 5,
 			max_purchases = 1
 		),
+		"Short Bow and Quiver (3)" = list(
+			list(type = /obj/item/gun/ballistic/revolver/grenadelauncher/bow/short, count = 1),
+			list(type = /obj/item/ammo_holder/quiver/arrows, count = 1),
+			cost = 3,
+			max_purchases = 1
+		),
+		"Psydonian Longsword (8)" = list(
+			list(type = /obj/item/weapon/sword/long/psydon, count = 1),
+			cost = 8,
+			max_purchases = 2
+		),
+		"Psydonian Greatsword (8)" = list(
+			list(type = /obj/item/weapon/sword/long/greatsword/psydon, count = 1),
+			cost = 8,
+			max_purchases = 1
+		),
+		"Psydonian Spear (8)" = list(
+			list(type = /obj/item/weapon/polearm/spear/psydon, count = 1),
+			cost = 8,
+			max_purchases = 1
+		),
+		"Psydonian Halberd (8)" = list(
+			list(type = /obj/item/weapon/polearm/halberd/psydon, count = 1),
+			cost = 8,
+			max_purchases = 1
+		),
+		"Psydonian Grand Mace (8)" = list(
+			list(type = /obj/item/weapon/mace/goden/psydon, count = 1),
+			cost = 8,
+			max_purchases = 1
+		),
+		"Psydonian Axe (3)" = list(
+			list(type = /obj/item/weapon/axe/psydon, count = 1),
+			cost = 3,
+			max_purchases = 3
+		),
+		"Psydonian Flail (3)" = list(
+			list(type = /obj/item/weapon/flail/psydon, count = 1),
+			cost = 3,
+			max_purchases = 3
+		),
+		"Psydonian Whip (3)" = list(
+			list(type = /obj/item/weapon/whip/psydon, count = 1),
+			cost = 3,
+			max_purchases = 3
+		),
+		"Tossblade Belt (Silver) (4)" = list(
+			list(type = /obj/item/storage/belt/leather/knifebelt/black/psydon, count = 1),
+			cost = 4,
+			max_purchases = 1
+		),
+		"Psydonian Dagger (3)" = list(
+			list(type = /obj/item/weapon/knife/dagger/silver/psydon, count = 1),
+			cost = 3,
+			max_purchases = 3
+		),
 		"Spare Powder Flask (2)" = list(
 			list(type = /obj/item/reagent_containers/glass/bottle/aflask, count = 1),
 			cost = 2,
 			max_purchases = 1
 		),
 		"Battle Bomb (3)" = list(
-			list(type = /obj/item/bomb, count = 1),
+			list(type = /obj/item/explosive/bottle, count = 1),
 			cost = 3,
-			max_purchases = 2
-		),
-		"Silver Dagger (5)" = list(
-			list(type = /obj/item/weapon/knife/dagger/silver, count = 1),
-			cost = 5,
 			max_purchases = 2
 		),
 		"Spiked Mace (2)" = list(
@@ -439,7 +493,7 @@
 			cost = 3,
 			max_purchases = 3
 		),
-		"Vial Of Strong Poison (5)" = list(
+		"Vial Of Doom Poison (5)" = list(
 			list(type = /obj/item/reagent_containers/glass/bottle/vial/strongpoison, count = 1),
 			cost = 5,
 			max_purchases = 1
@@ -455,9 +509,34 @@
 			cost = 2,
 			max_purchases = 4
 		),
+		"Silver Mask (2)" = list(
+			list(type = /obj/item/clothing/face/facemask/silver, count = 1),
+			cost = 2,
+			max_purchases = 4
+		),
+		"Adept's Cowl (1)" = list(
+			list(type = /obj/item/clothing/head/adeptcowl, count = 1),
+			cost = 1,
+			max_purchases = 4
+		),
 		"Valorian Cloak (2)" = list(
 			list(type = /obj/item/clothing/cloak/cape/inquisitor, count = 1),
 			cost = 2,
+			max_purchases = 1
+		),
+		"Inquisitorial Hat (2)" = list(
+			list(type = /obj/item/clothing/head/leather/inqhat, count = 1),
+			cost = 2,
+			max_purchases = 1
+		),
+		"Crimson Spectacles (1)" = list(
+			list(type = /obj/item/clothing/face/spectacles/inqglasses, count = 1),
+			cost = 1,
+			max_purchases = 1
+		),
+		"Inquisitorial Duster (3)" = list(
+			list(type = /obj/item/clothing/armor/medium/scale/inqcoat, count = 1),
+			cost = 3,
 			max_purchases = 1
 		),
 		"Plate Vambraces (2)" = list(
@@ -471,7 +550,6 @@
 			max_purchases = 4
 		),
 	)
-	testing("Items defined: [items]")
 
 	// Populate the options for the shop interface
 	for(var/name in items)
@@ -480,19 +558,14 @@
 		var/max_purchases = item_data["max_purchases"]
 		var/purchase_count = user.purchase_history[name] || 0
 
-		testing("Processing item: [name], cost: [item_cost], max_purchases: [max_purchases], purchase_count: [purchase_count]")
-
 		// If the item has been purchased the maximum number of times, disable it
 		if(purchase_count >= max_purchases)
 			options[name] = "[name] - SOLD OUT"
-			testing("[name] is SOLD OUT")
 		else
 			options[name] = "[name] - [item_cost] confession(s)"
-			testing("[name] available for purchase at [item_cost] confessions")
 
 	// Ask the user to select an item
 	var/selection = input(user, "Select an item to request", "I have [user.confession_points] favors left...") as null | anything in options
-	testing("User selected: [selection]")
 	if(!selection)
 		return
 
@@ -502,31 +575,24 @@
 	var/max_purchases = item_data["max_purchases"]
 	var/purchase_count = user.purchase_history[selection] || 0
 
-	testing("Selected item: [selection], cost: [item_cost], purchase_count: [purchase_count], max_purchases: [max_purchases]")
-
 	// Check if we are still next to the mailer.
 	if(!Adjacent(user))
 		return
 
 	// Check if the item is sold out
 	if(purchase_count >= max_purchases)
-		testing("[selection] is SOLD OUT after selection")
 		to_chat(user, "<span class='warning'>This item is sold out.</span>")
 		return
 
 	// Get the current confession points from the user
 	var/current_points = user.confession_points || 0
-	testing("User confession points: [current_points]")
 	if(current_points < item_cost)
-		testing("User does not have enough confession points: [current_points] < [item_cost]")
 		to_chat(user, "<span class='warning'>You do not have enough favors.</span>")
 		return
 
 	// Deduct the points and give the items
 	user.confession_points -= item_cost
-	testing("Deducted [item_cost] confession points, remaining: [user.confession_points]")
 	user.purchase_history[selection] = purchase_count + 1
-	testing("Updated purchase history for [selection]: [user.purchase_history[selection]]")
 
 	// Loop through the sub-list to generate multiple items
 	for(var/item in item_data)
@@ -535,14 +601,11 @@
 			var/item_count = item["count"]
 			if(item_type && item_count) // Ensure the item list has both type and count defined
 				for(var/i = 1 to item_count)
-					testing("Creating item: [item_type] x[item_count]")
 					var/obj/item/I = new item_type(get_turf(user)) // Create the item at the user's location
 					if(!user.put_in_hands(I)) // Try to put the item in the user's hands
-						testing("Failed to place item in hands, dropping at user's location")
 						I.forceMove(get_turf(user)) // If not, drop it at the user's location
 
 	visible_message("<span class='warning'>The mailbox spits out its contents.</span>")
 	say("HERE IS THE REQUESTED ITEM. WE HOPE IT SERVES YOU WELL.",language = /datum/language/oldpsydonic)
 	playsound(src, 'sound/misc/machinelong.ogg', 100, FALSE, -1)
-	testing("Finished processing user selection and item dispensing")
 	return

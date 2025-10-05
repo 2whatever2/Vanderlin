@@ -1,7 +1,11 @@
 /datum/species/human
 	name = "Humanb"
-	id = "human"
-	changesource_flags = MIRROR_BADMIN | WABBAJACK | MIRROR_MAGIC | MIRROR_PRIDE | RACE_SWAP | SLIME_EXTRACT
+	id = SPEC_ID_HUMEN
+	changesource_flags = WABBAJACK
+	bodypart_features = list(
+		/datum/bodypart_feature/hair/head,
+		/datum/bodypart_feature/hair/facial,
+	)
 
 /datum/species/human/check_roundstart_eligible()
 	return FALSE
@@ -30,5 +34,6 @@
 	"black - nightsky" = "0a0707",
 	"brown - treebark" = "362e25",
 	"blonde - moonlight" = "dfc999",
-	"red - autumn" = "a34332"
+	"red - autumn" = "a34332",
+	"orange - rust" = "bc5e35"
 	))

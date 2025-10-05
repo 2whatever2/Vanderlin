@@ -1,5 +1,4 @@
-#define LINKIFY_READY(string, value) "<a href='byond://?src=[REF(src)];ready=[value]'>[string]</a>"
-GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json"))
+GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.txt"))
 
 /mob/dead/new_player
 	flags_1 = NONE
@@ -15,6 +14,8 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 	var/mob/living/new_character
 	/// Used to make sure someone doesn't get spammed with messages if they're ineligible for roles
 	var/ineligible_for_roles = FALSE
+
+	hud_type = /datum/hud/new_player
 
 /mob/dead/new_player/Initialize()
 	if(length(GLOB.newplayer_start))
@@ -36,16 +37,12 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 	set category = "IC"
 	set hidden = 1
 
-#ifdef MATURESERVER
-
 	if(message)
 		if(client)
 			if(GLOB.ooc_allowed)
 				client.ooc(message)
 			else
 				client.lobbyooc(message)
-
-#endif
 
 /mob/dead/new_player/prepare_huds()
 	return
@@ -55,9 +52,6 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 		sleep(0.5 SECONDS)
 		new_player_panel()
 		return
-	if(client)
-		if(client.prefs)
-			client.prefs.ShowChoices(src, 4)
 
 /mob/dead/new_player/Topic(href, href_list[])
 	if(src != usr)
@@ -98,11 +92,6 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 		if(SSticker.current_state <= GAME_STATE_PREGAME)
 			if(ready != tready)
 				ready = tready
-		//if it's post initialisation and they're trying to observe we do the needful
-		if(!SSticker.current_state < GAME_STATE_PREGAME && tready == PLAYER_READY_TO_OBSERVE)
-			ready = tready
-			make_me_an_observer()
-			return
 
 	if(href_list["refresh"])
 		winshow(src, "stonekeep_prefwin", FALSE)
@@ -138,24 +127,6 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 				to_chat(usr, "<span class='warning'>[pick(choicez)] ([ttime]).</span>")
 				return
 
-		var/plevel = 0
-		if(ismob(usr))
-			var/mob/user = usr
-			if(user.client)
-				plevel = user.client.patreonlevel()
-		if(!IsPatreon(ckey))
-			if(SSticker.queued_players.len || (relevant_cap && living_player_count() >= relevant_cap && !(ckey(key) in GLOB.admin_datums) && plevel < 1))
-				to_chat(usr, "<span class='danger'>[CONFIG_GET(string/hard_popcap_message)]</span>")
-
-				var/queue_position = SSticker.queued_players.Find(usr)
-				if(queue_position == 1)
-					to_chat(usr, "<span class='notice'>Thou art next in line to join the game. You will be notified when a slot opens up.</span>")
-				else if(queue_position)
-					to_chat(usr, "<span class='notice'>Thou art [queue_position-1] players in front of you in the queue to join the game.</span>")
-				else
-					SSticker.queued_players += usr
-					to_chat(usr, "<span class='notice'>Thou have been added to the queue to join the game. Your position in queue is [SSticker.queued_players.len].</span>")
-				return
 		LateChoices()
 
 	if(href_list["SelectedJob"])
@@ -197,18 +168,6 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 		var/datum/poll_question/poll = locate(href_list["votepollref"]) in GLOB.polls
 		vote_on_poll_handler(poll, href_list)
 
-
-
-/mob/dead/new_player/verb/do_rp_prompt()
-	set name = "Lore Primer"
-	set category = "Memory"
-	var/list/dat = list()
-	dat += GLOB.roleplay_readme
-	if(dat)
-		var/datum/browser/popup = new(src, "Primer", "STONEKEEP", 460, 550)
-		popup.set_content(dat.Join())
-		popup.open()
-
 //When you cop out of the round (NB: this HAS A SLEEP FOR PLAYER INPUT IN IT)
 /mob/dead/new_player/proc/make_me_an_observer()
 	if(QDELETED(src) || !src.client)
@@ -241,7 +200,7 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 	if(observer.client && observer.client.prefs)
 		observer.real_name = observer.client.prefs.real_name
 		observer.name = observer.real_name
-	observer.update_icon()
+	observer.update_appearance()
 	observer.stop_sound_channel(CHANNEL_LOBBYMUSIC)
 	QDEL_NULL(mind)
 	qdel(src)
@@ -286,6 +245,13 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 /mob/dead/new_player/proc/IsJobUnavailable(rank, latejoin = FALSE)
 	var/datum/job/job = SSjob.GetJob(rank)
 	//TODO: This fucking sucks.
+
+	if(is_skeleton_knight_job(job)) //has to be first because it's a subtype of skeleton
+		if(has_world_trait(/datum/world_trait/death_knight))
+			return JOB_AVAILABLE
+		else
+			return JOB_UNAVAILABLE_GENERIC
+
 	if(is_skeleton_job(job))
 		if(has_world_trait(/datum/world_trait/skeleton_siege))
 			return JOB_AVAILABLE
@@ -300,12 +266,6 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 
 	if(is_rousman_job(job))
 		if(has_world_trait(/datum/world_trait/rousman_siege))
-			return JOB_AVAILABLE
-		else
-			return JOB_UNAVAILABLE_GENERIC
-
-	if(is_deathknight_job(job))
-		if(has_world_trait(/datum/world_trait/death_knight))
 			return JOB_AVAILABLE
 		else
 			return JOB_UNAVAILABLE_GENERIC
@@ -340,15 +300,16 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 		return JOB_UNAVAILABLE_PLAYTIME
 	if(latejoin && !job.special_check_latejoin(client))
 		return JOB_UNAVAILABLE_GENERIC
-	if(length(job.allowed_races) && !(client.prefs.pref_species.name in job.allowed_races))
-		if(!client.triumph_ids.Find("race_all"))
+	if(length(job.allowed_races) && !(client.prefs.pref_species.id in job.allowed_races))
+		if(!client.has_triumph_buy(TRIUMPH_BUY_RACE_ALL))
 			return JOB_UNAVAILABLE_RACE
 /*	if(length(job.allowed_patrons) && !(client.prefs.selected_patron.type in job.allowed_patrons))
 		return JOB_UNAVAILABLE_DEITY */
-	if(job.plevel_req > client.patreonlevel())
-		return JOB_UNAVAILABLE_PATREON
+
+	#ifdef USES_PQ
 	if(!isnull(job.min_pq) && (get_playerquality(ckey) < job.min_pq))
 		return JOB_UNAVAILABLE_QUALITY
+	#endif
 	if(length(job.allowed_sexes) && !(client.prefs.gender in job.allowed_sexes))
 		return JOB_UNAVAILABLE_SEX
 	if(length(job.allowed_ages) && !(client.prefs.age in job.allowed_ages))
@@ -404,6 +365,9 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 	GLOB.joined_player_list += character.ckey
 	GLOB.respawncounts[character.ckey] += 1
 
+	if(humanc)
+		try_apply_character_post_equipment(humanc)
+
 	log_manifest(character.mind.key,character.mind,character,latejoin = TRUE)
 
 
@@ -422,12 +386,13 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 		GLOB.peasant_positions,
 		GLOB.apprentices_positions,
 		GLOB.serf_positions,
+		GLOB.company_positions,
 		GLOB.youngfolk_positions,
+		GLOB.allmig_positions,
 	)
 
 	for(var/list/category in omegalist)
 		if(!SSjob.name_occupations[category[1]])
-			testing("HELP NO THING FOUND FOR [category[1]]")
 			continue
 
 		var/list/available_jobs = list()
@@ -451,15 +416,19 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 				if (GARRISON)
 					cat_name = "Garrison"
 				if (SERFS)
-					cat_name = "Tradesmen"
+					cat_name = "Yeomanry"
 				if (CHURCHMEN)
 					cat_name = "Churchmen"
+				if (COMPANY)
+					cat_name = "Company"
 				if (PEASANTS)
 					cat_name = "Peasantry"
 				if (APPRENTICES)
 					cat_name = "Apprentices"
 				if (YOUNGFOLK)
 					cat_name = "Young Folk"
+				if (OUTSIDERS)
+					cat_name = "Outsiders"
 
 			dat += "<fieldset style='width: 185px; border: 2px solid [cat_color]; display: inline'>"
 			dat += "<legend align='center' style='font-weight: bold; color: [cat_color]'>[cat_name]</legend>"
@@ -526,6 +495,9 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 	if(QDELETED(src) || !client)
 		return // Disconnected while checking for the appearance ban.
 
+	if(client.has_triumph_buy(TRIUMPH_BUY_RACE_ALL))
+		client.activate_triumph_buy(TRIUMPH_BUY_RACE_ALL)
+
 	mind.transfer_to(spawning_mob)
 	//client.init_verbs()
 	new_character = . = spawning_mob //right into left
@@ -570,6 +542,9 @@ GLOBAL_LIST_INIT(roleplay_readme, world.file2list("strings/rt/Lore_Primer.json")
 	src << browse(null, "window=preferences") //closes job selection
 	src << browse(null, "window=mob_occupation")
 	src << browse(null, "window=latechoices") //closes late job selection
+	src << browse(null, "window=culinary_customization")
+	src << browse(null, "window=food_selection")
+	src << browse(null, "window=drink_selection")
 
 	SStriumphs.remove_triumph_buy_menu(client)
 

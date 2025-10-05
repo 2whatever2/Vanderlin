@@ -20,6 +20,7 @@ INITIALIZE_IMMEDIATE(/mob/dead)
 	if(length(CONFIG_GET(keyed_list/cross_server)))
 		verbs += /mob/dead/proc/server_hop
 	set_focus(src)
+	become_hearing_sensitive()
 	return INITIALIZE_HINT_NORMAL
 
 /mob/dead/Destroy()
@@ -98,9 +99,6 @@ INITIALIZE_IMMEDIATE(/mob/dead)
 			readied_as++
 			// But do we show them?
 
-			if((player.client.ckey in GLOB.hiderole))
-				continue
-
 			// We will show them
 			if(player.client.prefs.real_name)
 				var/thing = "[player.client.prefs.real_name]"
@@ -137,7 +135,7 @@ INITIALIZE_IMMEDIATE(/mob/dead)
 	set name = "Server Hop!"
 	set desc= "Jump to the other server"
 	set hidden = 1
-	if(notransform)
+	if(HAS_TRAIT(src, TRAIT_NO_TRANSFORM))
 		return
 	var/list/csa = CONFIG_GET(keyed_list/cross_server)
 	var/pick
@@ -162,9 +160,9 @@ INITIALIZE_IMMEDIATE(/mob/dead)
 	to_chat(C, "<span class='notice'>Sending you to [pick].</span>")
 	new /atom/movable/screen/splash(C)
 
-	notransform = TRUE
+	ADD_TRAIT(src, TRAIT_NO_TRANSFORM, "server_hop")
 	sleep(29)	//let the animation play
-	notransform = FALSE
+	REMOVE_TRAIT(src, TRAIT_NO_TRANSFORM, "server_hop")
 
 	if(!C)
 		return

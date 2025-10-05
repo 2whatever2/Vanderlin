@@ -10,8 +10,8 @@
 	w_class = WEIGHT_CLASS_SMALL
 	throw_speed = 1
 	throw_range = 5
-	breakouttime = 5 SECONDS
-	slipouttime = 1 MINUTES
+	breakouttime = 10 SECONDS
+	slipouttime = 30 SECONDS
 	possible_item_intents = list(/datum/intent/tie)
 	firefuel = 5 MINUTES
 	drop_sound = 'sound/foley/dropsound/cloth_drop.ogg'
@@ -20,15 +20,15 @@
 /obj/item/rope/mob_can_equip(mob/living/M, mob/living/equipper, slot, disable_warning, bypass_equip_delay_self)
 	. = ..()
 	if(.)
-		if(slot == SLOT_BELT && !equipper)
+		if((slot & ITEM_SLOT_BELT) && !equipper)
 			if(!do_after(M, 1.5 SECONDS, src))
 				return FALSE
 
 /obj/item/rope/equipped(mob/living/carbon/human/user, slot)
 	. = ..()
-	if(slot == SLOT_BELT)
+	if(slot & ITEM_SLOT_BELT)
 		user.temporarilyRemoveItemFromInventory(src)
-		user.equip_to_slot_if_possible(new /obj/item/storage/belt/leather/rope(get_turf(user)), SLOT_BELT)
+		user.equip_to_slot_if_possible(new /obj/item/storage/belt/leather/rope(get_turf(user)), ITEM_SLOT_BELT)
 		qdel(src)
 
 /datum/intent/tie
@@ -44,7 +44,7 @@
 	if(iscarbon(loc))
 		var/mob/living/carbon/M = loc
 		if(M.handcuffed == src)
-			M.handcuffed = null
+			M.set_handcuffed(null)
 			M.update_handcuffed()
 			if(M.buckled && M.buckled.buckle_requires_restraints)
 				M.buckled.unbuckle_mob(M)
@@ -64,15 +64,15 @@
 
 	if(user.aimheight >= 5)
 		if(!C.handcuffed)
-			if(C.get_num_arms(FALSE))
+			if(C.num_hands)
 				C.visible_message(span_warning("[user] is trying to tie [C]'s arms with [src.name]!"), \
 									span_danger("[user] is trying to tie my arms with [src.name]!"))
-				if(do_after(user, 6 SECONDS * (C.surrendering ? 0.5 : 1), C) && C.get_num_arms(FALSE))
+				if(do_after(user, 6 SECONDS * (C.surrendering ? 0.5 : 1), C) && C.num_hands)
 					apply_cuffs(C, user, leg = FALSE)
 					C.visible_message(span_warning("[user] ties [C]' arms with [src.name]."), \
 										span_danger("[user] ties my arms up with [src.name]."))
 					SSblackbox.record_feedback("tally", "handcuffs", 1, type)
-					user.mind?.adjust_experience(/datum/skill/craft/traps, C.STAINT, FALSE)
+					user.adjust_experience(/datum/skill/craft/traps, C.STAINT, FALSE)
 					log_combat(user, C, "handcuffed")
 				else
 					to_chat(user, span_warning("I fail to tie up [C]'s arms!</span>"))
@@ -80,15 +80,15 @@
 				to_chat(user, span_warning("[C] is missing two or one arms."))
 	else
 		if(!C.legcuffed)
-			if(C.get_num_legs(FALSE))
+			if(C.num_legs)
 				C.visible_message(span_warning("[user] is trying to tie [C]'s legs with [src.name]!"), \
 									span_danger("[user] is trying to tie my legs with [src.name]!"))
-				if(do_after(user, 6 SECONDS * (C.surrendering ? 0.5 : 1), C) && C.get_num_legs(FALSE))
+				if(do_after(user, 6 SECONDS * (C.surrendering ? 0.5 : 1), C) && C.num_legs)
 					apply_cuffs(C, user, leg = TRUE)
 					C.visible_message(span_warning("[user] ties [C]' legs with [src.name]."), \
 										span_danger("[user] ties my legs up with [src.name]."))
 					SSblackbox.record_feedback("tally", "legcuffs", 1, type)
-					user.mind?.adjust_experience(/datum/skill/craft/traps, C.STAINT, FALSE)
+					user.adjust_experience(/datum/skill/craft/traps, C.STAINT, FALSE)
 					log_combat(user, C, "legcuffed")
 				else
 					to_chat(user, span_warning("I fail to tie up [C]'s legs!</span>"))
@@ -106,7 +106,7 @@
 		var/obj/item/cuffs = src
 
 		cuffs.forceMove(target)
-		target.handcuffed = cuffs
+		target.set_handcuffed(cuffs)
 
 		target.update_handcuffed()
 		return
@@ -143,9 +143,11 @@
 	wdefense = 1
 	throw_speed = 1
 	throw_range = 3
-	breakouttime = 1 MINUTES
-	slipouttime = 5 MINUTES
+	breakouttime = 30 SECONDS
+	slipouttime = 1 MINUTES
 	possible_item_intents = list(/datum/intent/tie, /datum/intent/whip)
+	melting_material = /datum/material/iron
+	melt_amount = 40
 	firefuel = null
 	drop_sound = 'sound/foley/dropsound/chain_drop.ogg'
 
@@ -166,11 +168,11 @@
 	throwforce = 5
 	w_class = WEIGHT_CLASS_SMALL
 	icon_state = "net"
-	breakouttime = 35//easy to apply, easy to break out of
+	breakouttime = 3.5 SECONDS //easy to apply, easy to break out of
 	gender = NEUTER
 	var/knockdown = 0
 
-/obj/item/net/throw_at(atom/target, range, speed, mob/thrower, spin=1, diagonals_first = 0, datum/callback/callback)
+/obj/item/net/throw_at(atom/target, range, speed, mob/thrower, spin=1, diagonals_first = 0, datum/callback/callback, force, gentle = FALSE)
 	if(!..())
 		return
 	playsound(src.loc,'sound/blank.ogg', 75, TRUE)
@@ -181,7 +183,7 @@
 	ensnare(hit_atom)
 
 /obj/item/net/proc/ensnare(mob/living/carbon/C)
-	if(!C.legcuffed && C.get_num_legs(FALSE) >= 2)
+	if(!C.legcuffed && C.num_legs >= 2)
 		visible_message("<span class='danger'>\The [src] ensnares [C]!</span>")
 		C.legcuffed = src
 		forceMove(C)
@@ -208,7 +210,7 @@
 	name = "noose"
 	desc = "Abandon all hope."
 	icon = 'icons/roguetown/misc/tallstructure.dmi'
-	pixel_y = 10
+	SET_BASE_PIXEL(0, 10)
 	icon_state = "noose"
 	can_buckle = 1
 	layer = 4.26
@@ -228,7 +230,7 @@
 	name = "gallows"
 	desc = "Stranded and hanging, limp and dead."
 	icon_state = "gallows"
-	pixel_y = 0
+	SET_BASE_PIXEL(0, 0)
 	max_integrity = 100
 
 /obj/structure/noose/Destroy()
@@ -257,11 +259,11 @@
 	else
 		return ..()
 
-/obj/structure/noose/bullet_act(obj/projectile/P)
+/obj/structure/noose/bullet_act(obj/projectile/P, def_zone, piercing_hit = FALSE)
 	. = ..()
 	new /obj/item/rope(loc)
 	playsound(src, 'sound/foley/dropsound/cloth_drop.ogg', 50, TRUE)
-	if (istype(src, /obj/structure/noose/gallows))
+	if(istype(src, /obj/structure/noose/gallows))
 		new /obj/machinery/light/fueled/lanternpost/unfixed(loc)
 		visible_message(span_danger("The noose is shot down from the gallows!"))
 	else
@@ -269,7 +271,7 @@
 	qdel(src)
 
 /obj/structure/noose/user_buckle_mob(mob/living/M, mob/user, check_loc)
-	if(!in_range(user, src) || user.stat != CONSCIOUS || !iscarbon(M))
+	if(!in_range(user, src) || user.stat != CONSCIOUS || HAS_TRAIT(user, TRAIT_RESTRAINED) || !iscarbon(M))
 		return FALSE
 
 	if (!M.get_bodypart("head"))
@@ -334,6 +336,6 @@
 			else
 				buckled_mob.visible_message("<span class='danger'>[buckled_mob] drops from the noose!</span>")
 				buckled_mob.Knockdown(60)
-				buckled_mob.pixel_y = initial(buckled_mob.pixel_y)
-				buckled_mob.pixel_x = initial(buckled_mob.pixel_x)
+				buckled_mob.pixel_y = buckled_mob.base_pixel_y
+				buckled_mob.pixel_x = buckled_mob.base_pixel_x
 				unbuckle_all_mobs(force=1)

@@ -10,14 +10,11 @@
 	obj_flags = CAN_BE_HIT
 	var/dead = FALSE
 	eat_effect = /datum/status_effect/debuff/uncookedfood
-	fried_type = null
 	max_integrity = 10
 	sellprice = 0
 	blade_dulling = DULLING_CUT
 	rotprocess = null
 	static_debris = list(/obj/item/natural/feather=1)
-	fried_type = /obj/item/reagent_containers/food/snacks/friedcrow
-	cooked_smell = /datum/pollutant/food/fried_crow
 
 /obj/item/reagent_containers/food/snacks/friedcrow
 	name = "fried zad"
@@ -79,15 +76,14 @@
 	if(prob(8))
 		playsound(src, pick('sound/vo/mobs/bird/CROW_01.ogg','sound/vo/mobs/bird/CROW_02.ogg','sound/vo/mobs/bird/CROW_03.ogg'), 100, TRUE, -1)
 
-/obj/item/reagent_containers/food/snacks/crow/obj_destruction(damage_flag)
-	//..()
+/obj/item/reagent_containers/food/snacks/crow/atom_destruction(damage_flag)
 	if(!dead)
 		dead = TRUE
 		playsound(src, 'sound/vo/mobs/rat/rat_death.ogg', 100, FALSE, -1)
 		icon_state = "[icon_state]1"
 		rotprocess = SHELFLIFE_SHORT
 		return 1
-	. = ..()
+	return ..()
 
 /obj/item/reagent_containers/food/snacks/crow/Crossed(mob/living/L)
 	. = ..()

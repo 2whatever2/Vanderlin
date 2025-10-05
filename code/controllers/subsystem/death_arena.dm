@@ -174,11 +174,11 @@ SUBSYSTEM_DEF(death_arena)
 		second_spawn = get_turf(movable)
 		return
 
-/datum/outfit/job/arena_skeleton/pre_equip(mob/living/carbon/human/H, visualsOnly)
+/datum/outfit/arena_skeleton/pre_equip(mob/living/carbon/human/H, visuals_only)
 	..()
 
-	H.mind?.adjust_skillrank(/datum/skill/combat/axesmaces, 2, TRUE)
-	H.mind?.adjust_skillrank(/datum/skill/combat/swords, 2, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/axesmaces, 2, TRUE)
+	H.adjust_skillrank(/datum/skill/combat/swords, 2, TRUE)
 
 	r_hand = /obj/item/weapon/mace/steel
 	l_hand = /obj/item/weapon/shield/wood
@@ -197,6 +197,7 @@ SUBSYSTEM_DEF(death_arena)
 	if(!istype(item, /obj/item/bodypart/head))
 		return
 	add_abstract_elastic_data(ELASCAT_COMBAT, ELASDATA_FIGHT_REVIVES, 1)
+	record_round_statistic(STATS_UNDERWORLD_DUELS)
 	SSdeath_arena.process_fight_end(item, user)
 
 /obj/structure/underworld/ravox

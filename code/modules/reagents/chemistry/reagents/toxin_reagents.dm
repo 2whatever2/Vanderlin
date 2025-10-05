@@ -23,8 +23,6 @@
 	toxpwr = 2.5
 	taste_description = "mushroom"
 
-#define	LIQUID_PLASMA_BP (50+T0C)
-
 /datum/reagent/toxin/plasma
 	name = "Plasma"
 	description = "Plasma in its liquid form."
@@ -104,7 +102,7 @@
 	if(M.toxloss <= 60)
 		M.adjustToxLoss(1*REM, 0)
 	if(current_cycle >= 4)
-		SEND_SIGNAL(M, COMSIG_ADD_MOOD_EVENT, "smacked out", /datum/mood_event/narcotic_heavy, name)
+		M.add_stress(/datum/stress_event/narcotic_heavy)
 	if(current_cycle >= 18)
 		M.Sleeping(40, 0)
 	..()
@@ -119,7 +117,7 @@
 	toxpwr = 0
 
 /datum/reagent/toxin/killersice/on_mob_life(mob/living/carbon/M)
-	testing("Someone was poisoned")
+	//testing("Someone was poisoned") // This is too gold to remove
 	if(volume > 0.95)
 		M.adjustToxLoss(10, 0)
 	return ..()

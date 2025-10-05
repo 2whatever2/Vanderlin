@@ -11,9 +11,12 @@
 	var/earliest_start = 12 MINUTES	//The earliest world.time that an event can start (round-duration in deciseconds) default: 20 mins
 	var/min_players = 0				//The minimum amount of alive, non-AFK human players on server required to start the event.
 
-	var/occurrences = 0				//How many times this event has occured
-	var/max_occurrences = 20		//The maximum number of times this event can occur (naturally), it can still be forced.
-									//By setting this to 0 you can effectively disable an event.
+	/// How many times this event has occured
+	var/occurrences = 0
+	/// The maximum number of times this event can occur (naturally), it can still be forced. By setting this to 0 you can effectively disable an event.
+	var/max_occurrences = 20
+	/// Loaded occurrences from the last round events
+	var/last_round_occurrences = 0
 
 	var/holidayID = ""				//string which should be in the SSeventss.holidays list if you wish this event to be holiday-specific
 									//anything with a (non-null) holidayID which does not match holiday, cannot run.
@@ -73,7 +76,7 @@
 		if(string)
 			string += ","
 		string += "Cap Reached"
-	if(earliest_start >= world.time-SSticker.round_start_time)
+	if(earliest_start > max(world.time - SSticker.round_start_time, 0))
 		if(string)
 			string += ","
 		string +="Too Soon"
@@ -109,7 +112,7 @@
 	if(occurrences >= max_occurrences)
 		return FALSE
 
-	if(earliest_start >= world.time-SSticker.round_start_time)
+	if(earliest_start > max(world.time - SSticker.round_start_time, 0))
 		return FALSE
 
 	if(wizardevent != SSevents.wizardmode)
@@ -149,7 +152,6 @@
 		if(!GLOB.badomens.len)
 			return EVENT_CANCELLED
 		badomen(pick_n_take(GLOB.badomens))
-		testing("[name] has started")
 
 	triggering = FALSE
 
@@ -157,6 +159,10 @@
 
 /datum/round_event_control/Topic(href, href_list)
 	..()
+
+	if(!check_rights(NONE))
+		return
+
 	if(href_list["cancel"])
 		if(!triggering)
 			to_chat(usr, "<span class='admin'>I are too late to cancel that event</span>")
@@ -362,6 +368,10 @@
 
 /datum/round_event_control/Topic(href, href_list)
 	. = ..()
+
+	if(!check_rights(NONE))
+		return
+
 	if(QDELETED(src))
 		return
 	switch(href_list["action"])
@@ -386,21 +396,37 @@ GLOBAL_LIST_INIT(badomens, list())
 
 /proc/addomen(input)
 	if(!(input in GLOB.badomens))
-		testing("Omen added: [input]")
 		GLOB.badomens += input
 
 /proc/removeomen(input)
 	if(!hasomen(input))
 		return
-	testing("Omen removed: [input]")
 	GLOB.badomens -= input
 
-
 /datum/round_event_control/proc/badomen(eventreason)
-	var/used
+	var/used = "Zizo."
+	var/title = "Bad Omen"
+	var/sound = 'sound/misc/evilevent.ogg'
 	switch(eventreason)
 		if(OMEN_ROUNDSTART)
-			used = "Zizo."
+			used = pick( \
+				"Zizo.", \
+				"Unholy invocations channel the will of Her.", \
+				"Forbidden rituals cause echoes through the plane.", \
+				"Whispers of the Dark Lady in the shadows.", \
+				"The servants of Zizo undermine the Ten.", \
+				"Her influence becomes more tangible...", \
+				"A foul curse temporarily takes the land.", \
+				"The dead churn and dig at their graves.", \
+			)
+			title = pick( \
+				"Zizo Sneers", \
+				"The Dark Lady Watches", \
+				"Zizo's Attention", \
+				"She Peers", \
+				"Zizo Smirks", \
+			)
+			sound = 'sound/misc/gods/zizo_omen.ogg'
 		if(OMEN_NOLORD)
 			used = "The Monarch is dead! We need a new ruler."
 		if(OMEN_NOPRIEST)
@@ -415,5 +441,8 @@ GLOBAL_LIST_INIT(badomens, list())
 			used = "Zizo will rise once again."
 		if("psycross")
 			used = "You have angered the gods!"
-	if(eventreason && used)
-		priority_announce(used, "Bad Omen", 'sound/misc/evilevent.ogg')
+	if(!eventreason)
+		return
+	if(!used || !title || !sound)
+		return
+	priority_announce(used, title, sound)

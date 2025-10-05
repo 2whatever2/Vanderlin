@@ -17,6 +17,61 @@
 	dropshrink = 0.9
 
 
+/obj/item/reagent_containers/food/snacks/raw_pie
+	name = "uncooked pie"
+	desc = "The foundation of the fantastical."
+	icon_state = "pieuncooked"
+
+	var/overlay_state = ""
+	var/pie_roof = FALSE
+
+/obj/item/reagent_containers/food/snacks/raw_pie/Initialize()
+	. = ..()
+	update_appearance(UPDATE_OVERLAYS)
+
+/obj/item/reagent_containers/food/snacks/raw_pie/update_overlays()
+	. = ..()
+	var/mutable_appearance/MA = mutable_appearance(icon, "[overlay_state]3")
+	MA.color = filling_color
+	. +=  MA
+
+	. += mutable_appearance(icon, "pieuncooked")
+	if(pie_roof)
+		. += mutable_appearance(icon, pie_roof)
+
+/obj/item/reagent_containers/food/snacks/raw_pie/fish
+	name = "uncooked fish pie"
+	icon_state = "fishpie_raw"
+	filling_color = "#bb5a93"
+	overlay_state = "fill_fish"
+
+/obj/item/reagent_containers/food/snacks/raw_pie/pot_pie
+	name = "uncooked pot pie"
+	filling_color = "#9d8c3b"
+	overlay_state = "fill_pot"
+
+/obj/item/reagent_containers/food/snacks/raw_pie/apple
+	name = "uncooked apple pie"
+	filling_color = "#eca48c"
+	overlay_state = "fill_apple"
+
+/obj/item/reagent_containers/food/snacks/raw_pie/pear
+	name = "uncooked pear pie"
+	filling_color = "#edd28c"
+	overlay_state = "fill_pear"
+
+/obj/item/reagent_containers/food/snacks/raw_pie/berry
+	name = "uncooked berry pie"
+	filling_color = "#394da5"
+	overlay_state = "fill_berry"
+/obj/item/reagent_containers/food/snacks/raw_pie/berry/poison
+
+/obj/item/reagent_containers/food/snacks/raw_pie/meat
+	name = "uncooked meat pie"
+	icon_state = "meatpie_raw"
+	filling_color = "#b44f44"
+	overlay_state = "fill_meat"
+
 /*--------------\
 | Pie templates |
 \--------------*/
@@ -104,7 +159,7 @@
 // -------------- MEAT PIE -----------------
 /obj/item/reagent_containers/food/snacks/pie/cooked/meat // bae item
 	name = "meat pie"
-	desc = ""
+	desc = "A pie that is fit for meat lovers. It contains meat, meat, and nothing but meat."
 	foodtype = GRAIN | DAIRY | MEAT
 	list_reagents = list(/datum/reagent/consumable/nutriment = MEATPIE_NUTRITION)
 
@@ -138,7 +193,7 @@
 // -------------- POT PIE -----------------
 /obj/item/reagent_containers/food/snacks/pie/cooked/pot
 	name = "pot pie"
-	desc = ""
+	desc = "A pie made with a host of different ingredients. May or may not contain meat."
 	slices_num = 6
 	list_reagents = list(/datum/reagent/consumable/nutriment = MEATPIE_NUTRITION)
 	tastes = list("mysterious filling and butterdough" = 1)
@@ -156,7 +211,7 @@
 // -------------- BERRY PIE -----------------
 /obj/item/reagent_containers/food/snacks/pie/cooked/berry
 	name = "berry pie"
-	desc = ""
+	desc = "A sweet pie made from jackberries. A popular choice for banquets among peasants, and enjoyed by all."
 	list_reagents = list(/datum/reagent/consumable/nutriment = FRUITPIE_NUTRITION)
 	slices_num = 4
 	tastes = list("butterdough" = 1, "berries" = 1)
@@ -181,7 +236,7 @@
 // -------------- APPLE PIE -----------------
 /obj/item/reagent_containers/food/snacks/pie/cooked/apple
 	name = "apple pie"
-	desc = ""
+	desc = "A sweet pie made from apples. Some claim it to taste even better with cheese."
 	slices_num = 4
 	list_reagents = list(/datum/reagent/consumable/nutriment = FRUITPIE_NUTRITION)
 	tastes = list("apples and butterdough" = 1)
@@ -196,7 +251,7 @@
 // -------------- PEAR PIE -----------------
 /obj/item/reagent_containers/food/snacks/pie/cooked/pear
 	name = "pear pie"
-	desc = ""
+	desc = "A sweet pie made from pears. Not as famous as it's other fruit cousins."
 	slices_num = 4
 	list_reagents = list(/datum/reagent/consumable/nutriment = FRUITPIE_NUTRITION)
 	tastes = list("pears and butterdough" = 1)
@@ -216,12 +271,11 @@
 	name = "raw handpie"
 	desc = "The dwarven take on pies, called pierogi in their dialect. A fistfull of food to stand the test of time."
 	icon_state = "handpie_raw"
-	cooked_type = /obj/item/reagent_containers/food/snacks/handpie
-	fried_type = /obj/item/reagent_containers/food/snacks/handpie
 	cooked_smell = /datum/pollutant/food/pie_base
 	list_reagents = list(/datum/reagent/consumable/nutriment = SNACK_DECENT)
 	w_class = WEIGHT_CLASS_NORMAL
 	dropshrink = 0.8
+	transfers_tastes = TRUE
 
 /obj/item/reagent_containers/food/snacks/foodbase/handpieraw/mushroom
 	w_class = WEIGHT_CLASS_NORMAL

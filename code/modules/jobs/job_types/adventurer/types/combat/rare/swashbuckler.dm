@@ -1,24 +1,24 @@
 //rapier/sabre
 
-/datum/advclass/combat/swashbuckler
-	name = "Swashbuckler"
+/datum/job/advclass/combat/swashbuckler
+	title = "Swashbuckler"
 	tutorial = "Woe the Sea King! You awake, dazed from a true festivity of revelry and feasting. The last thing you remember? Your mateys dumping you over the side of the boat as a joke. Now on some Gods foresaken rock, Abyssor will present you with booty and fun, no doubt."
-	allowed_sexes = list(MALE, FEMALE)
-	allowed_races = list(
-		"Humen",
-		"Elf",
-		"Half-Elf",
-		"Tiefling",
-		"Aasimar",
-		"Half-Orc"
+	allowed_races = list(\
+		SPEC_ID_HUMEN,\
+		SPEC_ID_ELF,\
+		SPEC_ID_HALF_ELF,\
+		SPEC_ID_TIEFLING,\
+		SPEC_ID_AASIMAR,\
+		SPEC_ID_HALF_ORC,\
+		SPEC_ID_RAKSHARI,\
 	)
-	outfit = /datum/outfit/job/adventurer/swashbuckler
-	maximum_possible_slots = 1
+	outfit = /datum/outfit/adventurer/swashbuckler
+	total_positions = 1
 	min_pq = 0
-	pickprob = 30
+	roll_chance = 30
 	category_tags = list(CTAG_ADVENTURER)
 
-/datum/outfit/job/adventurer/swashbuckler
+/datum/outfit/adventurer/swashbuckler
 	head = /obj/item/clothing/head/helmet/leather/headscarf
 	pants = /obj/item/clothing/pants/tights/sailor
 	belt = /obj/item/storage/belt/leather
@@ -31,25 +31,25 @@
 	shoes = /obj/item/clothing/shoes/boots
 	neck = /obj/item/clothing/neck/psycross/silver/abyssor
 
-/datum/outfit/job/adventurer/swashbuckler/pre_equip(mob/living/carbon/human/H)
+/datum/outfit/adventurer/swashbuckler/pre_equip(mob/living/carbon/human/H)
 	..()
 	if(H.mind)
 		if(H.patron != /datum/patron/divine/abyssor)
-			H.set_patron(/datum/patron/divine/abyssor)
+			H.set_patron(/datum/patron/divine/abyssor, TRUE)
 
-		H.mind?.adjust_skillrank(/datum/skill/combat/swords, 4, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/combat/knives, 2, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/combat/unarmed, 3, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/combat/wrestling, 3, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/labor/fishing, 3, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/swimming, 4, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/climbing, 3, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/sneaking, 3, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/stealing, 3, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/sewing, 1, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/athletics, 4, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/misc/reading, 1, TRUE)
-		H.mind?.adjust_skillrank(/datum/skill/craft/traps, 2, TRUE)
+		H.adjust_skillrank(/datum/skill/combat/swords, 4, TRUE)
+		H.adjust_skillrank(/datum/skill/combat/knives, 2, TRUE)
+		H.adjust_skillrank(/datum/skill/combat/unarmed, 3, TRUE)
+		H.adjust_skillrank(/datum/skill/combat/wrestling, 3, TRUE)
+		H.adjust_skillrank(/datum/skill/labor/fishing, 3, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/swimming, 4, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/climbing, 3, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/sneaking, 3, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/stealing, 3, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/sewing, 1, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/athletics, 4, TRUE)
+		H.adjust_skillrank(/datum/skill/misc/reading, 1, TRUE)
+		H.adjust_skillrank(/datum/skill/craft/traps, 2, TRUE)
 
 	shirt = pick(/obj/item/clothing/shirt/undershirt/sailor, /obj/item/clothing/shirt/undershirt/sailor/red)
 	ADD_TRAIT(H, TRAIT_DODGEEXPERT, TRAIT_GENERIC)

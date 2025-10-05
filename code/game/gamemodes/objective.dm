@@ -13,9 +13,15 @@ GLOBAL_LIST(admin_objective_list) //Prefilled admin assignable objective list
 	var/triumph_count = 1
 	var/flavor = "Goal" //so it appear as "goal", "dream", "aspiration", etc
 
-/datum/objective/New(text)
+/datum/objective/New(text, datum/mind/owner)
 	if(text)
 		explanation_text = text
+	if(owner)
+		src.owner = owner
+	on_creation()
+
+/datum/objective/proc/on_creation()
+	return
 
 /datum/objective/proc/get_owners() // Combine owner and team into a single list.
 	. = (team && team.members) ? team.members.Copy() : list()
@@ -102,8 +108,7 @@ GLOBAL_LIST(admin_objective_list) //Prefilled admin assignable objective list
 		dupe_search_range = get_owners()
 	var/list/possible_targets = list()
 	var/try_target_late_joiners = FALSE
-	for(var/I in owners)
-		var/datum/mind/O = I
+	for(var/datum/mind/O as anything in owners)
 		if(O.late_joiner)
 			try_target_late_joiners = TRUE
 	for(var/datum/mind/possible_target in get_crewmember_minds())
@@ -112,8 +117,7 @@ GLOBAL_LIST(admin_objective_list) //Prefilled admin assignable objective list
 				possible_targets += possible_target
 	if(try_target_late_joiners)
 		var/list/all_possible_targets = possible_targets.Copy()
-		for(var/I in all_possible_targets)
-			var/datum/mind/PT = I
+		for(var/datum/mind/PT as anything in all_possible_targets)
 			if(!PT.late_joiner)
 				possible_targets -= PT
 		if(!possible_targets.len)
@@ -132,7 +136,7 @@ GLOBAL_LIST(admin_objective_list) //Prefilled admin assignable objective list
 	if(receiver && receiver.current)
 		if(ishuman(receiver.current))
 			var/mob/living/carbon/human/H = receiver.current
-			var/list/slots = list("backpack" = SLOT_IN_BACKPACK)
+			var/list/slots = list("backpack" = ITEM_SLOT_BACKPACK)
 			for(var/eq_path in special_equipment)
 				var/obj/O = new eq_path
 				H.equip_in_one_of_slots(O, slots)
@@ -228,7 +232,7 @@ GLOBAL_LIST(admin_objective_list) //Prefilled admin assignable objective list
 
 /datum/objective/protect//The opposite of killing a dude.
 	name = "protect"
-	martyr_compatible = 1
+	martyr_compatible = TRUE
 	var/target_role_type = FALSE
 	var/human_check = TRUE
 
@@ -508,11 +512,10 @@ GLOBAL_LIST_EMPTY(possible_items)
 		/datum/objective/steal,
 		/datum/objective/capture,
 		/datum/objective/custom
-	),/proc/cmp_typepaths_asc)
+	),GLOBAL_PROC_REF(cmp_typepaths_asc))
 
-	for(var/T in allowed_types)
-		var/datum/objective/X = T
-		GLOB.admin_objective_list[initial(X.name)] = T
+	for(var/datum/objective/objective as anything in allowed_types)
+		GLOB.admin_objective_list[initial(objective.name)] = objective
 
 /datum/objective/contract
 	var/payout = 0
@@ -523,7 +526,7 @@ GLOBAL_LIST_EMPTY(possible_items)
 /datum/objective/contract/proc/generate_dropoff()
 	var/found = FALSE
 	while (!found)
-		var/area/dropoff_area = pick(GLOB.sortedAreas)
+		var/area/dropoff_area = pick(GLOB.areas)
 		if(dropoff_area && is_station_level(dropoff_area.z) && !dropoff_area.outdoors)
 			dropoff = dropoff_area
 			found = TRUE

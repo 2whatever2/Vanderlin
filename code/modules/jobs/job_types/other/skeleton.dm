@@ -7,31 +7,17 @@
 /datum/job/skeleton
 	title = "Skeleton"
 	tutorial = null
-	flag = SKELETON
 	department_flag = UNDEAD
 	job_flags = (JOB_EQUIP_RANK)
-	faction = FACTION_STATION //this seems wrong?
+	faction = FACTION_TOWN //this seems wrong?
 	total_positions = -1 //this also seems wrong?
 	spawn_positions = 0
 	antag_job = TRUE
 
-	allowed_sexes = list(MALE, FEMALE)
-	allowed_races = list(
-		"Humen",
-		"Rakshari",
-		"Elf",
-		"Half-Elf",
-		"Dwarf",
-		"Tiefling",
-		"Dark Elf",
-		"Aasimar",
-		"Half-Orc",
-		"Kobold",
-	)
-
+	allowed_races = RACES_PLAYER_ALL
 	cmode_music = 'sound/music/cmode/antag/combatskeleton.ogg'
 
-	outfit = /datum/outfit/job/skeleton
+	outfit = /datum/outfit/skeleton
 	give_bank_account = FALSE
 
 /datum/job/skeleton/after_spawn(mob/living/spawned, client/player_client)
@@ -55,17 +41,11 @@
 		qdel(O)
 	H.regenerate_limb(BODY_ZONE_R_ARM)
 	H.regenerate_limb(BODY_ZONE_L_ARM)
-	for(var/obj/item/bodypart/B in H.bodyparts)
-		B.skeletonize()
+	H.skeletonize()
 	H.base_intents = list(INTENT_HELP, INTENT_DISARM, INTENT_GRAB, /datum/intent/simple/claw)
 	H.update_a_intents()
 
-	var/obj/item/organ/eyes/eyes = H.getorganslot(ORGAN_SLOT_EYES)
-	if(eyes)
-		eyes.Remove(H, TRUE)
-		QDEL_NULL(eyes)
-	eyes = new /obj/item/organ/eyes/night_vision/zombie
-	eyes.Insert(H)
+	H.grant_undead_eyes()
 	H.ambushable = FALSE
 	H.underwear = "Nude"
 	if(H.charflaw)
@@ -83,18 +63,19 @@
 	ADD_TRAIT(H, TRAIT_NOSLEEP, TRAIT_GENERIC)
 	ADD_TRAIT(H, TRAIT_SHOCKIMMUNE, TRAIT_GENERIC)
 
-/datum/outfit/job/skeleton/pre_equip(mob/living/carbon/human/H)
+/datum/outfit/skeleton/pre_equip(mob/living/carbon/human/H)
 	..()
 
-	H.TOTALSTR = rand(8,10)
-	H.TOTALSPD = rand(7,10)
-	H.TOTALINT = 1
-	H.TOTALCON = 3
+	H.base_strength = rand(8,10)
+	H.base_speed = rand(7,10)
+	H.base_intelligence = 1
+	H.base_constitution = 3
+	H.recalculate_stats(FALSE)
 
 /* RAIDER SKELETONS */
 /datum/job/skeleton/raider
 	title = "Skeleton Raider"
-	outfit = /datum/outfit/job/skeleton/raider
+	outfit = /datum/outfit/skeleton/raider
 
 /datum/job/skeleton/raider/after_spawn(mob/living/carbon/spawned, client/player_client)
 	..()
@@ -112,7 +93,7 @@
 	spawned.mind.add_antag_datum(new_antag)
 
 
-/datum/outfit/job/skeleton/raider/pre_equip(mob/living/carbon/human/H)
+/datum/outfit/skeleton/raider/pre_equip(mob/living/carbon/human/H)
 	..()
 	wrists = /obj/item/clothing/wrists/bracers/leather
 	if(prob(50))
@@ -178,7 +159,7 @@
 /* CULT SUMMONS */
 /datum/job/skeleton/zizoid
 	title = "Cult Summon"
-	outfit = /datum/outfit/job/skeleton/zizoid
+	outfit = /datum/outfit/skeleton/zizoid
 	cmode_music = 'sound/music/cmode/antag/combat_cult.ogg'
 
 /datum/job/skeleton/zizoid/after_spawn(mob/living/spawned, client/player_client)
@@ -189,12 +170,17 @@
 	H.mind?.current.job = null
 	H.set_patron(/datum/patron/inhumen/zizo)
 
-/datum/outfit/job/skeleton/zizoid/pre_equip(mob/living/carbon/human/H)
+/datum/outfit/skeleton/zizoid/pre_equip(mob/living/carbon/human/H)
 	..()
-	H.TOTALSTR = rand(8,17)
-	H.TOTALSPD = rand(7,10)
-	H.TOTALINT = 1
-	H.TOTALCON = 3
+	H.base_strength = rand(8,17)
+	H.base_speed = rand(7,10)
+	H.base_intelligence = 1
+	H.base_constitution = 3
+	H.recalculate_stats(FALSE)
+	H.grant_language(/datum/language/undead)
+	if(H.dna?.species)
+		H.dna.species.native_language = "Zizo Chant"
+		H.dna.species.accent_language = H.dna.species.get_accent(H.dna.species.native_language)
 
 	H.verbs |= /mob/living/carbon/human/proc/praise
 	H.verbs |= /mob/living/carbon/human/proc/communicate
